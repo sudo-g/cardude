@@ -47,6 +47,9 @@ public class CameraSurface
         public void surfaceCreated(SurfaceHolder holder)
         {
             mCamera = Camera.open(mCamIndex);
+
+            int rotation = mParentActivity.getWindowManager().getDefaultDisplay().getRotation();
+            setCameraToCurrentOrientation(rotation);
         }
 
         @Override
@@ -99,23 +102,28 @@ public class CameraSurface
 
     private void setCameraToCurrentOrientation(int rotation)
     {
-        if (rotation == Surface.ROTATION_0)
+        int degrees = 0;
+        switch (rotation)
         {
-            mCamera.setDisplayOrientation(0);
-        }
-        else if (rotation == Surface.ROTATION_90)
-        {
-            mCamera.setDisplayOrientation(90);
-        }
-        else if (rotation == Surface.ROTATION_180)
-        {
-            mCamera.setDisplayOrientation(180);
-        }
-        else if (rotation == Surface.ROTATION_270)
-        {
-            mCamera.setDisplayOrientation(270);
+            case Surface.ROTATION_0:
+                degrees = 0;
+                break;
+            case Surface.ROTATION_90:
+                degrees = 90;
+                break;
+            case Surface.ROTATION_180:
+                degrees = 180;
+                break;
+            case Surface.ROTATION_270:
+                degrees = 270;
+                break;
         }
 
-        mCamera.setDisplayOrientation(0);
+        CameraInfo info = new Camera.CameraInfo();
+        Camera.getCameraInfo(mCamIndex, info);
+
+        int result = (info.orientation - degrees + 360) % 360;
+
+        mCamera.setDisplayOrientation(result);
     }
 }
