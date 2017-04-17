@@ -3,6 +3,7 @@ package sudo_g.cardude;
 import android.graphics.PixelFormat;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.content.res.Configuration;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.LayoutInflater;
@@ -22,7 +23,8 @@ public class CameraActivity extends ActionBarActivity {
         setContentView(R.layout.activity_camera);
 
         getWindow().setFormat(PixelFormat.UNKNOWN);
-        mCameraSurface = new CameraSurface(this);
+        mCameraSurface = (CameraSurface) findViewById(R.id.camerapreview);
+        mCameraSurface.setup();
 
         controlInflater = LayoutInflater.from(getBaseContext());
         View viewControl = controlInflater.inflate(R.layout.cam_overlays, null);
@@ -56,5 +58,13 @@ public class CameraActivity extends ActionBarActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        int rotation = getWindowManager().getDefaultDisplay().getRotation();
+        mCameraSurface.setRotationAngle(rotation);
     }
 }

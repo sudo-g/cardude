@@ -1,22 +1,26 @@
 package sudo_g.cardude;
 
-import android.app.Activity;
+import java.util.List;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
+import android.content.Context;
+import android.util.AttributeSet;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import java.io.IOException;
 
-public class CameraSurface
+public class CameraSurface extends SurfaceView
 {
-    private final Activity mParentActivity;
+    private int mCurrentRotation = 0;
 
     private boolean previewing = false;
     private int mCamIndex = -1;
     private Camera mCamera;
-    private SurfaceView mSurfaceView;
+    private List mSupportedPreviewSizes;
+    private Camera.Size mPreviewSize;
+
     private SurfaceHolder mSurfaceHolder;
     private SurfaceHolder.Callback mSurfaceHolderEvents = new SurfaceHolder.Callback()
     {
@@ -30,6 +34,7 @@ public class CameraSurface
             }
 
             if (mCamera != null) {
+                mCamera.setDisplayOrientation(getCorrectCameraRotation(mCurrentRotation, mCamIndex));
                 try
                 {
                     mCamera.setPreviewDisplay(mSurfaceHolder);
@@ -47,9 +52,7 @@ public class CameraSurface
         public void surfaceCreated(SurfaceHolder holder)
         {
             mCamera = Camera.open(mCamIndex);
-
-            int rotation = mParentActivity.getWindowManager().getDefaultDisplay().getRotation();
-            setCameraToCurrentOrientation(rotation);
+            mSupportedPreviewSizes = mCamera.getParameters().getSupportedPreviewSizes();
         }
 
         @Override
@@ -62,20 +65,72 @@ public class CameraSurface
         }
     };
 
-    /**
-     * Creates the camera surface, call inside onCreate() of Activity.
-     *
-     * @param activity Parent activity creating this object.
-     */
-    public CameraSurface(Activity activity)
+    public CameraSurface(Context context)
     {
-        mParentActivity = activity;
+        super(context);
+    }
 
+    public CameraSurface(Context context, AttributeSet attrs)
+    {
+        super(context, attrs);
+    }
+
+    public CameraSurface(Context context, AttributeSet attrs, int defStyle)
+    {
+        super(context, attrs, defStyle);
+    }
+
+    /**
+     * Setup all other resources required by this view.
+     */
+    public void setup()
+    {
         mCamIndex = findBackFacingCameraIndex();
 
-        mSurfaceView = (SurfaceView) mParentActivity.findViewById(R.id.camerapreview);
-        mSurfaceHolder = mSurfaceView.getHolder();
+        mSurfaceHolder = getHolder();
         mSurfaceHolder.addCallback(mSurfaceHolderEvents);
+    }
+
+    /**
+     * Rotate the camera preview by desired angle.
+     *
+     * @param rotation Angle in degrees.
+     */
+    public void setRotationAngle(int rotation)
+    {
+        mCurrentRotation = rotation;
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec)
+    {
+        final int width = resolveSize(getSuggestedMinimumWidth(), widthMeasureSpec);
+        final int height = resolveSize(getSuggestedMinimumHeight(), heightMeasureSpec);
+
+        if (mSupportedPreviewSizes != null)
+        {
+            mPreviewSize = getOptimalPreviewSize(mSupportedPreviewSizes, width, height);
+        }
+
+        if (mPreviewSize != null)
+        {
+            float ratio;
+            if(mPreviewSize.height >= mPreviewSize.width)
+            {
+                ratio = (float) mPreviewSize.height / (float) mPreviewSize.width;
+            }
+            else
+            {
+                ratio = (float) mPreviewSize.width / (float) mPreviewSize.height;
+            }
+
+            setMeasuredDimension(width, (int) (width * ratio));
+        }
+        else
+        {
+            // reverting to default view behavior
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        }
     }
 
     private int findBackFacingCameraIndex()
@@ -100,7 +155,51 @@ public class CameraSurface
         return retCamIndex;
     }
 
-    private void setCameraToCurrentOrientation(int rotation)
+    private Camera.Size getOptimalPreviewSize(List<Camera.Size> sizes, int w, int h)
+    {
+        final double ASPECT_TOLERANCE = 0.1;
+        double targetRatio = (double) h / w;
+
+        if (sizes == null)
+            return null;
+
+        Camera.Size optimalSize = null;
+        double minDiff = Double.MAX_VALUE;
+
+        int targetHeight = h;
+
+        // find the best preview size within the aspect ratio tolerance
+        for (Camera.Size size : sizes)
+        {
+            double ratio = (double) size.height / size.width;
+            if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE)
+            {
+                continue;
+            }
+
+            if (Math.abs(size.height - targetHeight) < minDiff)
+            {
+                optimalSize = size;
+                minDiff = Math.abs(size.height - targetHeight);
+            }
+        }
+
+        // if none in tolerance, find the best based on height
+        if (optimalSize == null)
+        {
+            minDiff = Double.MAX_VALUE;
+            for (Camera.Size size : sizes) {
+                if (Math.abs(size.height - targetHeight) < minDiff) {
+                    optimalSize = size;
+                    minDiff = Math.abs(size.height - targetHeight);
+                }
+            }
+        }
+
+        return optimalSize;
+    }
+
+    private int getCorrectCameraRotation(int rotation, int camIndex)
     {
         int degrees = 0;
         switch (rotation)
@@ -120,10 +219,8 @@ public class CameraSurface
         }
 
         CameraInfo info = new Camera.CameraInfo();
-        Camera.getCameraInfo(mCamIndex, info);
+        Camera.getCameraInfo(camIndex, info);
 
-        int result = (info.orientation - degrees + 360) % 360;
-
-        mCamera.setDisplayOrientation(result);
+        return (info.orientation - degrees + 360) % 360;
     }
 }
