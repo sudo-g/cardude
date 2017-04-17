@@ -33,8 +33,16 @@ public class CameraSurface extends SurfaceView
                 previewing = false;
             }
 
-            if (mCamera != null) {
+            if (mCamera != null)
+            {
                 mCamera.setDisplayOrientation(getCorrectCameraRotation(mCurrentRotation, mCamIndex));
+                if (mPreviewSize != null)
+                {
+                    Camera.Parameters parameters = mCamera.getParameters();
+                    parameters.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
+                    mCamera.setParameters(parameters);
+                }
+
                 try
                 {
                     mCamera.setPreviewDisplay(mSurfaceHolder);
@@ -124,7 +132,14 @@ public class CameraSurface extends SurfaceView
                 ratio = (float) mPreviewSize.width / (float) mPreviewSize.height;
             }
 
-            setMeasuredDimension(width, (int) (width * ratio));
+            if (mCurrentRotation == Surface.ROTATION_0 || mCurrentRotation == Surface.ROTATION_180)
+            {
+                setMeasuredDimension(width, (int) (width * ratio));
+            }
+            else
+            {
+                setMeasuredDimension(width, (int) (width / ratio));
+            }
         }
         else
         {
@@ -188,8 +203,10 @@ public class CameraSurface extends SurfaceView
         if (optimalSize == null)
         {
             minDiff = Double.MAX_VALUE;
-            for (Camera.Size size : sizes) {
-                if (Math.abs(size.height - targetHeight) < minDiff) {
+            for (Camera.Size size : sizes)
+            {
+                if (Math.abs(size.height - targetHeight) < minDiff)
+                {
                     optimalSize = size;
                     minDiff = Math.abs(size.height - targetHeight);
                 }
