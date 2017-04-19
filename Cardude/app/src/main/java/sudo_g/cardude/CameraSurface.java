@@ -1,6 +1,10 @@
 package sudo_g.cardude;
 
+import java.io.IOException;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.List;
+
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 import android.content.Context;
@@ -8,8 +12,6 @@ import android.util.AttributeSet;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-
-import java.io.IOException;
 
 public class CameraSurface extends SurfaceView
 {
@@ -22,15 +24,17 @@ public class CameraSurface extends SurfaceView
     private Camera.Size mPreviewSize;
 
     private SurfaceHolder mSurfaceHolder;
-    private SurfaceHolder.Callback mSurfaceHolderEvents = new SurfaceHolder.Callback()
+    private final SurfaceHolder.Callback mSurfaceHolderEvents = new SurfaceHolder.Callback()
     {
         @Override
         public void surfaceChanged(SurfaceHolder holder, int format, int width, int height)
         {
             if (previewing)
             {
+                mCapturePreviewLock.lock();
                 mCamera.stopPreview();
                 previewing = false;
+                mCapturePreviewLock.unlock();
             }
 
             if (mCamera != null)
@@ -73,6 +77,18 @@ public class CameraSurface extends SurfaceView
         }
     };
 
+    private final Lock mCapturePreviewLock = new ReentrantLock();    // keeps preview flag synchronized
+    private final Camera.PictureCallback mCaptureJpegEvent = new Camera.PictureCallback()
+    {
+        public void onPictureTaken(byte[] data, Camera camera)
+        {
+            mCapturePreviewLock.lock();
+            mCamera.startPreview();
+            previewing = true;
+            mCapturePreviewLock.unlock();
+        }
+    };
+
     public CameraSurface(Context context)
     {
         super(context);
@@ -107,6 +123,23 @@ public class CameraSurface extends SurfaceView
     public void setRotationAngle(int rotation)
     {
         mCurrentRotation = rotation;
+    }
+
+    public boolean takePicture()
+    {
+        if (!previewing)
+        {
+            return false;
+        }
+        else
+        {
+            mCapturePreviewLock.lock();
+            mCamera.takePicture(null, null, mCaptureJpegEvent);
+            previewing = false;    // preview stops when picture is taken
+            mCapturePreviewLock.unlock();
+
+            return true;
+        }
     }
 
     @Override

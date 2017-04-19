@@ -9,23 +9,27 @@ import android.view.MenuItem;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
+import android.widget.Button;
 
 public class CameraActivity extends ActionBarActivity {
 
     LayoutInflater controlInflater = null;
 
     private CameraSurface mCameraSurface;
+    private Button mSnapshotButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
-
         getWindow().setFormat(PixelFormat.UNKNOWN);
+
+        // setup camera
         mCameraSurface = (CameraSurface) findViewById(R.id.camerapreview);
         mCameraSurface.setup();
 
+        // add overlays
         controlInflater = LayoutInflater.from(getBaseContext());
         View viewControl = controlInflater.inflate(R.layout.cam_overlays, null);
         LayoutParams layoutParamsControl = new LayoutParams(
@@ -33,6 +37,17 @@ public class CameraActivity extends ActionBarActivity {
             LayoutParams.MATCH_PARENT
         );
         this.addContentView(viewControl, layoutParamsControl);
+
+        mSnapshotButton = (Button) findViewById(R.id.snapshotbutton);
+        mSnapshotButton.setOnClickListener(
+            new View.OnClickListener()
+            {
+                public void onClick(View v)
+                {
+                    mCameraSurface.takePicture();
+                }
+            }
+        );
     }
 
 
