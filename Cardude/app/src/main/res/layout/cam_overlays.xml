@@ -13,4 +13,14 @@
         android:layout_marginRight="66dp"
         android:layout_marginEnd="66dp" />
 
+    <SeekBar
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/gmeter"
+        android:layout_above="@+id/snapshotbutton"
+        android:layout_centerHorizontal="true"
+        android:max="100"
+        android:progress="50"
+        android:progressDrawable="@android:color/transparent" />
+
 </RelativeLayout>

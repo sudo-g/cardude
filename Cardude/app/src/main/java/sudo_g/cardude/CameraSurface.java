@@ -17,7 +17,7 @@ public class CameraSurface extends SurfaceView
 {
     private int mCurrentRotation = 0;
 
-    private boolean previewing = false;
+    private volatile boolean previewing = false;
     private int mCamIndex = -1;
     private Camera mCamera;
     private List mSupportedPreviewSizes;

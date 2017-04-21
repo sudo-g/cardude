@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
+import android.widget.SeekBar;
 
 public class CameraActivity extends ActionBarActivity {
 
@@ -17,6 +18,7 @@ public class CameraActivity extends ActionBarActivity {
 
     private CameraSurface mCameraSurface;
     private Button mSnapshotButton;
+    private final GMeter mGMeter = new GMeter(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -48,8 +50,23 @@ public class CameraActivity extends ActionBarActivity {
                 }
             }
         );
+
+        mGMeter.setGuiElement((SeekBar) findViewById(R.id.gmeter));
     }
 
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+        mGMeter.start();
+    }
+
+    @Override
+    protected void onPause()
+    {
+        super.onPause();
+        mGMeter.stop();
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
@@ -81,5 +98,6 @@ public class CameraActivity extends ActionBarActivity {
 
         int rotation = getWindowManager().getDefaultDisplay().getRotation();
         mCameraSurface.setRotationAngle(rotation);
+        mGMeter.setRotationAngle(rotation);
     }
 }
