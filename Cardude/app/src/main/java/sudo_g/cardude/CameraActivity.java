@@ -51,7 +51,7 @@ public class CameraActivity extends ActionBarActivity {
             }
         );
 
-        mGMeter.setGuiElement((SeekBar) findViewById(R.id.gmeter));
+        mGMeter.bindGuiElement((SeekBar) findViewById(R.id.gmeter));
     }
 
     @Override

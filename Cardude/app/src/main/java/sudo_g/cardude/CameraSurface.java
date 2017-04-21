@@ -116,9 +116,9 @@ public class CameraSurface extends SurfaceView
     }
 
     /**
-     * Rotate the camera preview by desired angle.
+     * Rotate the camera preview given the device orientation.
      *
-     * @param rotation Angle in degrees.
+     * @param rotation Description of the rotation angle.
      */
     public void setRotationAngle(int rotation)
     {

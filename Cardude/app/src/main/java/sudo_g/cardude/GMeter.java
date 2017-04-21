@@ -80,7 +80,12 @@ public class GMeter
         mSensorManager.unregisterListener(mSensorCallbacks);
     }
 
-    public void setGuiElement(SeekBar guiElement)
+    /**
+     * Bind layout object to this g-meter instance.
+     *
+     * @param guiElement Element objects to bind this instance to.
+     */
+    public void bindGuiElement(SeekBar guiElement)
     {
         mGuiElement = guiElement;
 
@@ -93,6 +98,11 @@ public class GMeter
         });
     }
 
+    /**
+     * Inform the g-meter device has rotated so indicator uses the correct accelerometer axis.
+     *
+     * @param rotation Description of the rotation angle.
+     */
     public void setRotationAngle(int rotation)
     {
         switch (rotation)
