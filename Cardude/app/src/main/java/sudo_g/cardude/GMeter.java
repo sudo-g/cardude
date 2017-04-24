@@ -76,7 +76,7 @@ public class GMeter
         // start the task that periodically updates the indicator
         if (mGuiElement != null)
         {
-            mGuiElement.setProgress(R.integer.gmeter_resolution / 2);
+            mGuiElement.setProgress(mGuiElement.getMax() / 2);
         }
         mGuiUpdater.postDelayed(mGuiTask, GUI_UPDATE_INTERVAL_MS);
     }

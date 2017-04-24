@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
 import android.widget.SeekBar;
+import android.widget.TextView;
 
 public class CameraActivity extends ActionBarActivity {
 
@@ -19,6 +20,7 @@ public class CameraActivity extends ActionBarActivity {
     private CameraSurface mCameraSurface;
     private Button mSnapshotButton;
     private final GMeter mGMeter = new GMeter(this);
+    private final Speedometer mSpeedometer = new Speedometer(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -52,6 +54,7 @@ public class CameraActivity extends ActionBarActivity {
         );
 
         mGMeter.bindGuiElement((SeekBar) findViewById(R.id.gmeter));
+        mSpeedometer.bindGuiElement((TextView) findViewById(R.id.speedometer));
     }
 
     @Override
@@ -59,6 +62,7 @@ public class CameraActivity extends ActionBarActivity {
     {
         super.onResume();
         mGMeter.start();
+        mSpeedometer.start();
     }
 
     @Override
@@ -66,6 +70,7 @@ public class CameraActivity extends ActionBarActivity {
     {
         super.onPause();
         mGMeter.stop();
+        mSpeedometer.stop();
     }
 
     @Override
