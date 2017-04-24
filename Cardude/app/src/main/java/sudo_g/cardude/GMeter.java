@@ -14,7 +14,8 @@ import android.widget.SeekBar;
 
 public class GMeter
 {
-    static final int MAX_ACC_MS2 = 10;
+    private static final int MAX_ACC_MS2 = 10;
+    private static final int GUI_UPDATE_INTERVAL_MS = 30;
 
     private SeekBar mGuiElement;
 
@@ -49,11 +50,12 @@ public class GMeter
         @Override
         public void run()
         {
-            mGuiUpdater.postDelayed(mGuiTask, 50);
+            mGuiUpdater.postDelayed(mGuiTask, GUI_UPDATE_INTERVAL_MS);
             if (mGuiElement != null)
             {
                 float localAccX = correctForRotation(mLocalAcc, mRotationAngle)[0];
-                int seekBarProgress = (int) -localAccX * mGuiElement.getMax() / MAX_ACC_MS2 + 50;
+                final int barCenterOffset = mGuiElement.getMax() / 2;
+                int seekBarProgress = (int) -localAccX * mGuiElement.getMax() / MAX_ACC_MS2 + barCenterOffset;
                 mGuiElement.setProgress(seekBarProgress);
             }
         }
@@ -72,7 +74,11 @@ public class GMeter
         mSensorManager.registerListener(mSensorCallbacks, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
 
         // start the task that periodically updates the indicator
-        mGuiUpdater.postDelayed(mGuiTask, 50);
+        if (mGuiElement != null)
+        {
+            mGuiElement.setProgress(R.integer.gmeter_resolution / 2);
+        }
+        mGuiUpdater.postDelayed(mGuiTask, GUI_UPDATE_INTERVAL_MS);
     }
 
     public void stop()
