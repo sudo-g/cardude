@@ -92,27 +92,35 @@ public class CameraSurface extends SurfaceView
     public CameraSurface(Context context)
     {
         super(context);
+        mCamIndex = findBackFacingCameraIndex();
+        mSurfaceHolder = getHolder();
     }
 
     public CameraSurface(Context context, AttributeSet attrs)
     {
         super(context, attrs);
+        mCamIndex = findBackFacingCameraIndex();
+        mSurfaceHolder = getHolder();
     }
 
     public CameraSurface(Context context, AttributeSet attrs, int defStyle)
     {
         super(context, attrs, defStyle);
+        mCamIndex = findBackFacingCameraIndex();
+        mSurfaceHolder = getHolder();
     }
 
     /**
      * Setup all other resources required by this view.
      */
-    public void setup()
+    public void start()
     {
-        mCamIndex = findBackFacingCameraIndex();
-
-        mSurfaceHolder = getHolder();
         mSurfaceHolder.addCallback(mSurfaceHolderEvents);
+    }
+
+    public void stop()
+    {
+        mSurfaceHolder.removeCallback(mSurfaceHolderEvents);
     }
 
     /**

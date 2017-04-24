@@ -43,12 +43,10 @@ public class Speedometer
         {
             if (location.hasSpeed())
             {
-                Log.d("Speedometer", String.format("%f", mSpeedMs));
                 mSpeedMs = location.getSpeed();
             }
             else
             {
-                Log.d("Speedometer", "No speed available");
                 mSpeedMs = null;
             }
         }

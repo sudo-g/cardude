@@ -1,12 +1,14 @@
 package sudo_g.cardude;
 
 import android.graphics.PixelFormat;
+import android.hardware.SensorManager;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.content.res.Configuration;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.LayoutInflater;
+import android.view.OrientationEventListener;
+import android.view.Surface;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
@@ -16,6 +18,9 @@ import android.widget.TextView;
 public class CameraActivity extends ActionBarActivity {
 
     LayoutInflater controlInflater = null;
+
+    private int mCurrentOrientation = Surface.ROTATION_0;
+    private OrientationEventListener mOrientationEventListener;
 
     private CameraSurface mCameraSurface;
     private Button mSnapshotButton;
@@ -29,9 +34,41 @@ public class CameraActivity extends ActionBarActivity {
         setContentView(R.layout.activity_camera);
         getWindow().setFormat(PixelFormat.UNKNOWN);
 
-        // setup camera
+        mOrientationEventListener = new OrientationEventListener(this, SensorManager.SENSOR_DELAY_NORMAL)
+        {
+            @Override
+            public void onOrientationChanged(int rotation)
+            {
+                if( (rotation < 35 || rotation > 325) && mCurrentOrientation != Surface.ROTATION_0)
+                {
+                    // PORTRAIT
+                    mCurrentOrientation = Surface.ROTATION_0;
+                    mGMeter.setRotationAngle(mCurrentOrientation);
+                }
+                else if (rotation > 145 && rotation < 215 && mCurrentOrientation != Surface.ROTATION_180)
+                {
+                    // REVERSE PORTRAIT
+                    mCurrentOrientation = Surface.ROTATION_180;
+                    mGMeter.setRotationAngle(mCurrentOrientation);
+                }
+                else if (rotation > 55 && rotation < 125 && mCurrentOrientation != Surface.ROTATION_270)
+                {
+                    // REVERSE LANDSCAPE
+                    mCurrentOrientation = Surface.ROTATION_270;
+                    mGMeter.setRotationAngle(mCurrentOrientation);
+                }
+                else if (rotation > 235 && rotation < 305 && mCurrentOrientation != Surface.ROTATION_90)
+                {
+                    //LANDSCAPE
+                    mCurrentOrientation = Surface.ROTATION_90;
+                    mGMeter.setRotationAngle(mCurrentOrientation);
+                }
+            }
+        };
+
+        // start camera
         mCameraSurface = (CameraSurface) findViewById(R.id.camerapreview);
-        mCameraSurface.setup();
+        mCameraSurface.start();
 
         // add overlays
         controlInflater = LayoutInflater.from(getBaseContext());
@@ -61,6 +98,9 @@ public class CameraActivity extends ActionBarActivity {
     protected void onResume()
     {
         super.onResume();
+
+        mOrientationEventListener.enable();
+
         mGMeter.start();
         mSpeedometer.start();
     }
@@ -69,6 +109,9 @@ public class CameraActivity extends ActionBarActivity {
     protected void onPause()
     {
         super.onPause();
+
+        mOrientationEventListener.disable();
+
         mGMeter.stop();
         mSpeedometer.stop();
     }
@@ -76,6 +119,7 @@ public class CameraActivity extends ActionBarActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
+        menu.clear();
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_camera, menu);
         return true;
@@ -95,14 +139,5 @@ public class CameraActivity extends ActionBarActivity {
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-
-        int rotation = getWindowManager().getDefaultDisplay().getRotation();
-        mCameraSurface.setRotationAngle(rotation);
-        mGMeter.setRotationAngle(rotation);
     }
 }

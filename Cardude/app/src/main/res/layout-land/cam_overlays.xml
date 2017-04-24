@@ -7,17 +7,15 @@
         android:layout_height="wrap_content"
         android:text="Snapshot"
         android:id="@+id/snapshotbutton"
-        android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
-        android:layout_marginRight="66dp"
-        android:layout_marginEnd="66dp" />
+        android:layout_marginRight="0dp" />
 
     <SeekBar
-        android:layout_width="150dp"
+        android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:id="@+id/gmeter"
-        android:layout_above="@+id/snapshotbutton"
+        android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:max="@integer/gmeter_resolution"
         android:progressDrawable="@android:color/transparent" />

@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="textoverlay">#FFFFFFFF</color>
+    <color name="text_overlay">#FFFFFFFF</color>
 </resources>
