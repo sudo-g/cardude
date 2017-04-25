@@ -77,7 +77,10 @@ public class Speedometer
         mLocationManager = (LocationManager) mParentActivity.getSystemService(Context.LOCATION_SERVICE);
         mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mLocationListener);
 
-        mGuiElement.postDelayed(mGuiTask, GUI_UPDATE_INTERVAL_MS);
+        if (mGuiElement != null)
+        {
+            mGuiElement.postDelayed(mGuiTask, GUI_UPDATE_INTERVAL_MS);
+        }
     }
 
     public void stop()
