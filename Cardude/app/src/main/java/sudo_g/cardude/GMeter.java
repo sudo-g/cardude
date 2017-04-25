@@ -11,6 +11,7 @@ import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.View;
 import android.widget.SeekBar;
+import sudo_g.cardude.OrientationManager.DeviceOrientation;
 
 public class GMeter
 {
@@ -109,20 +110,20 @@ public class GMeter
      *
      * @param rotation Description of the rotation angle.
      */
-    public void setRotationAngle(int rotation)
+    public void setRotationAngle(DeviceOrientation rotation)
     {
         switch (rotation)
         {
-            case Surface.ROTATION_0:
+            case PORTRAIT:
                 mRotationAngle = 0;
                 break;
-            case Surface.ROTATION_90:
+            case REVERSE_LANDSCAPE:
                 mRotationAngle = 90;
                 break;
-            case Surface.ROTATION_180:
+            case REVERSE_PORTRAIT:
                 mRotationAngle = 180;
                 break;
-            case Surface.ROTATION_270:
+            case LANDSCAPE:
                 mRotationAngle = 270;
                 break;
         }
