@@ -9,13 +9,14 @@ import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 import android.content.Context;
 import android.util.AttributeSet;
-import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import sudo_g.cardude.OrientationManager.DeviceOrientation;
+
 public class CameraSurface extends SurfaceView
 {
-    private int mCurrentRotation = 0;
+    private DeviceOrientation mCurrentRotation = DeviceOrientation.PORTRAIT;
 
     private volatile boolean previewing = false;
     private int mCamIndex = -1;
@@ -128,7 +129,7 @@ public class CameraSurface extends SurfaceView
      *
      * @param rotation Description of the rotation angle.
      */
-    public void setRotationAngle(int rotation)
+    public void setRotationAngle(OrientationManager.DeviceOrientation rotation)
     {
         mCurrentRotation = rotation;
     }
@@ -173,7 +174,7 @@ public class CameraSurface extends SurfaceView
                 ratio = (float) mPreviewSize.width / (float) mPreviewSize.height;
             }
 
-            if (mCurrentRotation == Surface.ROTATION_0 || mCurrentRotation == Surface.ROTATION_180)
+            if (mCurrentRotation == DeviceOrientation.PORTRAIT || mCurrentRotation == DeviceOrientation.REVERSE_PORTRAIT)
             {
                 setMeasuredDimension(width, (int) (width * ratio));
             }
@@ -257,21 +258,21 @@ public class CameraSurface extends SurfaceView
         return optimalSize;
     }
 
-    private int getCorrectCameraRotation(int rotation, int camIndex)
+    private int getCorrectCameraRotation(DeviceOrientation rotation, int camIndex)
     {
         int degrees = 0;
         switch (rotation)
         {
-            case Surface.ROTATION_0:
+            case PORTRAIT:
                 degrees = 0;
                 break;
-            case Surface.ROTATION_90:
+            case LANDSCAPE:
                 degrees = 90;
                 break;
-            case Surface.ROTATION_180:
+            case REVERSE_PORTRAIT:
                 degrees = 180;
                 break;
-            case Surface.ROTATION_270:
+            case REVERSE_LANDSCAPE:
                 degrees = 270;
                 break;
         }

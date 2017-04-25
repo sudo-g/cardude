@@ -20,6 +20,7 @@ public class CameraActivity extends ActionBarActivity {
     {
         public void onOrientationChanged(OrientationManager.DeviceOrientation orientation)
         {
+            mCameraSurface.setRotationAngle(orientation);
             mGMeter.setRotationAngle(orientation);
         }
     };

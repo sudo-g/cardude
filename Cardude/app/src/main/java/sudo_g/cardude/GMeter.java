@@ -8,9 +8,9 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Handler;
 import android.view.MotionEvent;
-import android.view.Surface;
 import android.view.View;
 import android.widget.SeekBar;
+
 import sudo_g.cardude.OrientationManager.DeviceOrientation;
 
 public class GMeter
@@ -117,13 +117,13 @@ public class GMeter
             case PORTRAIT:
                 mRotationAngle = 0;
                 break;
-            case REVERSE_LANDSCAPE:
+            case LANDSCAPE:
                 mRotationAngle = 90;
                 break;
             case REVERSE_PORTRAIT:
                 mRotationAngle = 180;
                 break;
-            case LANDSCAPE:
+            case REVERSE_LANDSCAPE:
                 mRotationAngle = 270;
                 break;
         }
