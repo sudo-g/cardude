@@ -20,16 +20,13 @@
         android:max="@integer/gmeter_resolution"
         android:progressDrawable="@android:color/transparent" />
 
-    <TextView
+    <sudo_g.cardude.Speedometer
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="@string/kmh"
         android:id="@+id/speedometer"
         android:layout_above="@+id/gmeter"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:textColor="@color/text_overlay"/>
+        android:layout_alignParentRight="true"/>
+
 
 
 </RelativeLayout>

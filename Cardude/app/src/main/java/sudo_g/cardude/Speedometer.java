@@ -1,23 +1,25 @@
 package sudo_g.cardude;
 
-import android.app.Activity;
 import android.content.Context;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
+import android.util.AttributeSet;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
-public class Speedometer
+public class Speedometer extends LinearLayout
 {
     private static final int FIX_TIMEOUT_MS = 1000 * 60 * 2;
     private static final int GUI_UPDATE_INTERVAL_MS = 30;
 
     private LocationManager mLocationManager;
-    private final Activity mParentActivity;
-    private TextView mGuiElement;
+    private TextView mSpeedIndicator;
+    private TextView mUnitIndicator;
     private Float mSpeedMs = null;
 
     private final Handler mGuiUpdater = new Handler();
@@ -27,11 +29,10 @@ public class Speedometer
         public void run()
         {
             mGuiUpdater.postDelayed(mGuiTask, GUI_UPDATE_INTERVAL_MS);
-            if (mGuiElement != null)
+            if (mSpeedIndicator != null)
             {
                 String speedText = (mSpeedMs == null) ? "--" : String.format("%.0f", ms2kmh(mSpeedMs));
-                String unitText = mParentActivity.getResources().getString(R.string.kmh);
-                mGuiElement.setText(String.format("%s %s", speedText, unitText));
+                mSpeedIndicator.setText(speedText);
             }
         }
     };
@@ -67,19 +68,32 @@ public class Speedometer
         }
     };
 
-    public Speedometer(Activity host)
+    public Speedometer(Context context)
     {
-        mParentActivity = host;
+        super(context);
+        initializeViews(context);
+    }
+
+    public Speedometer(Context context, AttributeSet attrs)
+    {
+        super(context, attrs, 0);
+        initializeViews(context);
+    }
+
+    public Speedometer(Context context, AttributeSet attrs, int defStyle)
+    {
+        super(context, attrs, defStyle);
+        initializeViews(context);
     }
 
     public void start()
     {
-        mLocationManager = (LocationManager) mParentActivity.getSystemService(Context.LOCATION_SERVICE);
+        mLocationManager = (LocationManager) getContext().getSystemService(Context.LOCATION_SERVICE);
         mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mLocationListener);
 
-        if (mGuiElement != null)
+        if (mSpeedIndicator != null)
         {
-            mGuiElement.postDelayed(mGuiTask, GUI_UPDATE_INTERVAL_MS);
+            mSpeedIndicator.postDelayed(mGuiTask, GUI_UPDATE_INTERVAL_MS);
         }
     }
 
@@ -88,9 +102,13 @@ public class Speedometer
         mLocationManager.removeUpdates(mLocationListener);
     }
 
-    public void bindGuiElement(TextView guiElement)
+    private void initializeViews(Context context)
     {
-        mGuiElement = guiElement;
+        LayoutInflater inflater = LayoutInflater.from(getContext());
+        View layout = inflater.inflate(R.layout.speedometer, this);
+
+        mSpeedIndicator = (TextView) layout.findViewById(R.id.speed_text);
+        mUnitIndicator = (TextView) layout.findViewById(R.id.unit_text);
     }
 
     /** Determines whether one Location reading is better than the current Location fix
