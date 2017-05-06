@@ -1,6 +1,8 @@
 package sudo_g.cardude;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.List;
@@ -21,8 +23,10 @@ public class CameraSurface extends SurfaceView
     private volatile boolean previewing = false;
     private int mCamIndex = -1;
     private Camera mCamera;
-    private List mSupportedPreviewSizes;
+    private List<Camera.Size> mSupportedPreviewSizes;
     private Camera.Size mPreviewSize;
+    private List<Camera.Size> mSupportedVideoSizes;
+    private Camera.Size mSelectedVideoSize;
 
     private SurfaceHolder mSurfaceHolder;
     private final SurfaceHolder.Callback mSurfaceHolderEvents = new SurfaceHolder.Callback()
@@ -66,6 +70,9 @@ public class CameraSurface extends SurfaceView
         {
             mCamera = Camera.open(mCamIndex);
             mSupportedPreviewSizes = mCamera.getParameters().getSupportedPreviewSizes();
+            mSupportedVideoSizes = mCamera.getParameters().getSupportedVideoSizes();
+            // automatically selecting the first for now, generally highest res available
+            mSelectedVideoSize = mSupportedVideoSizes.get(0);
         }
 
         @Override
@@ -83,6 +90,8 @@ public class CameraSurface extends SurfaceView
     {
         public void onPictureTaken(byte[] data, Camera camera)
         {
+
+
             mCapturePreviewLock.lock();
             mCamera.startPreview();
             previewing = true;
@@ -159,7 +168,8 @@ public class CameraSurface extends SurfaceView
 
         if (mSupportedPreviewSizes != null)
         {
-            mPreviewSize = getOptimalPreviewSize(mSupportedPreviewSizes, width, height);
+            double targetAspect = (double) mSelectedVideoSize.height / mSelectedVideoSize.width;
+            mPreviewSize = getOptimalPreviewSize(mSupportedPreviewSizes, width, height, targetAspect);
         }
 
         if (mPreviewSize != null)
@@ -212,50 +222,40 @@ public class CameraSurface extends SurfaceView
         return retCamIndex;
     }
 
-    private Camera.Size getOptimalPreviewSize(List<Camera.Size> sizes, int w, int h)
+    private Camera.Size getOptimalPreviewSize(List<Camera.Size> sizes, final int w, final int h, final double aspect)
     {
-        final double ASPECT_TOLERANCE = 0.1;
-        double targetRatio = (double) h / w;
-
         if (sizes == null)
-            return null;
-
-        Camera.Size optimalSize = null;
-        double minDiff = Double.MAX_VALUE;
-
-        int targetHeight = h;
-
-        // find the best preview size within the aspect ratio tolerance
-        for (Camera.Size size : sizes)
         {
-            double ratio = (double) size.height / size.width;
-            if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE)
-            {
-                continue;
-            }
-
-            if (Math.abs(size.height - targetHeight) < minDiff)
-            {
-                optimalSize = size;
-                minDiff = Math.abs(size.height - targetHeight);
-            }
+            return null;
         }
 
-        // if none in tolerance, find the best based on height
-        if (optimalSize == null)
+        // most suitable first
+        Comparator<Camera.Size> previewSizeSorter = new Comparator<Camera.Size>()
         {
-            minDiff = Double.MAX_VALUE;
-            for (Camera.Size size : sizes)
+            @Override
+            public int compare(Camera.Size size1, Camera.Size size2)
             {
-                if (Math.abs(size.height - targetHeight) < minDiff)
+                // if aspect ratio within tolerance, width by height
+                int heightDiff1 = Math.abs(size1.height - h);
+                int heightDiff2 = Math.abs(size2.height - h);
+
+                double aspectDiff1 = Math.abs((double) size1.height / size1.width - aspect);
+                double aspectDiff2 = Math.abs((double) size2.height / size2.width - aspect);
+
+                if (aspectDiff1 < 0.1 && aspectDiff2 < 0.1)
                 {
-                    optimalSize = size;
-                    minDiff = Math.abs(size.height - targetHeight);
+                    return heightDiff1 - heightDiff2;
+                }
+                else
+                {
+                    return (int) Math.signum(aspectDiff1 - aspectDiff2);
                 }
             }
-        }
+        };
 
-        return optimalSize;
+        Collections.sort(sizes, previewSizeSorter);
+
+        return sizes.get(0);
     }
 
     private int getCorrectCameraRotation(DeviceOrientation rotation, int camIndex)
