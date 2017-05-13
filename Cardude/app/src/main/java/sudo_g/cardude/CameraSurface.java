@@ -10,6 +10,9 @@ import java.util.List;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 import android.content.Context;
+import android.os.Handler;
+import android.media.CamcorderProfile;
+import android.media.MediaRecorder;
 import android.util.AttributeSet;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -20,11 +23,14 @@ public class CameraSurface extends SurfaceView
 {
     private DeviceOrientation mCurrentRotation = DeviceOrientation.PORTRAIT;
 
+    private final Handler mHandler = new Handler();
+
     private volatile boolean previewing = false;
     private int mCamIndex = -1;
     private Camera mCamera;
     private List<Camera.Size> mSupportedPreviewSizes;
     private Camera.Size mPreviewSize;
+
     private List<Camera.Size> mSupportedVideoSizes;
     private Camera.Size mSelectedVideoSize;
 
@@ -90,8 +96,6 @@ public class CameraSurface extends SurfaceView
     {
         public void onPictureTaken(byte[] data, Camera camera)
         {
-
-
             mCapturePreviewLock.lock();
             mCamera.startPreview();
             previewing = true;
@@ -102,22 +106,19 @@ public class CameraSurface extends SurfaceView
     public CameraSurface(Context context)
     {
         super(context);
-        mCamIndex = findBackFacingCameraIndex();
-        mSurfaceHolder = getHolder();
+        initialize();
     }
 
     public CameraSurface(Context context, AttributeSet attrs)
     {
         super(context, attrs);
-        mCamIndex = findBackFacingCameraIndex();
-        mSurfaceHolder = getHolder();
+        initialize();
     }
 
     public CameraSurface(Context context, AttributeSet attrs, int defStyle)
     {
         super(context, attrs, defStyle);
-        mCamIndex = findBackFacingCameraIndex();
-        mSurfaceHolder = getHolder();
+        initialize();
     }
 
     /**
@@ -160,6 +161,54 @@ public class CameraSurface extends SurfaceView
         }
     }
 
+    public boolean startRecordVideo(VideoFileManager fileManager) throws IOException
+    {
+        if (mCamera != null)
+        {
+            final MediaRecorder recorder = new MediaRecorder();
+            mCamera.unlock();
+            recorder.setCamera(mCamera);
+            recorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
+            recorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
+
+            CamcorderProfile profile = CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH);
+            profile.videoFrameWidth = mSelectedVideoSize.width;
+            profile.videoFrameHeight = mSelectedVideoSize.height;
+            recorder.setProfile(profile);
+
+            try
+            {
+                recorder.setOutputFile(fileManager.getInputStream());
+            }
+            catch (IOException e)
+            {
+                mCamera.reconnect();
+                throw e;
+            }
+
+            recorder.prepare();
+            recorder.start();
+
+            mHandler.postDelayed(
+                new Runnable()
+                {
+                    public void run()
+                    {
+                        recorder.stop();
+                        recorder.release();
+                    }
+                },
+                10000
+            );
+
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec)
     {
@@ -198,6 +247,12 @@ public class CameraSurface extends SurfaceView
             // reverting to default view behavior
             super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         }
+    }
+
+    private void initialize()
+    {
+        mCamIndex = findBackFacingCameraIndex();
+        mSurfaceHolder = getHolder();
     }
 
     private int findBackFacingCameraIndex()

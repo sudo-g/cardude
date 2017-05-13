@@ -1,6 +1,9 @@
 package sudo_g.cardude;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.graphics.PixelFormat;
+import android.provider.MediaStore;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -10,6 +13,8 @@ import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
 import android.widget.SeekBar;
+
+import java.io.IOException;
 
 public class CameraActivity extends ActionBarActivity {
 
@@ -24,11 +29,14 @@ public class CameraActivity extends ActionBarActivity {
         }
     };
     private OrientationManager mOrientationManager;
+    private final VideoFileManager mFileManager = new VideoFileManager(this);
 
     private CameraSurface mCameraSurface;
     private Button mSnapshotButton;
+    private Button mVideoButton;
     private final GMeter mGMeter = new GMeter(this);
     private Speedometer mSpeedometer;
+    private AlertDialog.Builder mAlertDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -63,8 +71,37 @@ public class CameraActivity extends ActionBarActivity {
             }
         );
 
+        mVideoButton = (Button) findViewById(R.id.video_button);
+        mVideoButton.setOnClickListener(
+            new View.OnClickListener()
+            {
+                public void onClick(View v)
+                {
+                    try
+                    {
+                        mCameraSurface.startRecordVideo(mFileManager);
+                    }
+                    catch (IOException e)
+                    {
+                        mAlertDialog.show();
+                    }
+                }
+            }
+        );
+
         mGMeter.bindGuiElement((SeekBar) findViewById(R.id.gmeter));
         mSpeedometer = (Speedometer) findViewById(R.id.speedometer);
+
+        // create error dialog
+        mAlertDialog = new AlertDialog.Builder(this)
+                .setTitle("Video Recording Error")
+                .setMessage("Could not create video file.")
+                .setNeutralButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        // continue with delete
+                    }
+                })
+                .setIcon(android.R.drawable.ic_dialog_alert);
     }
 
     @Override

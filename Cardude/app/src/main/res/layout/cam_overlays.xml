@@ -10,8 +10,17 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
-        android:layout_marginRight="66dp"
+        android:layout_marginRight="80dp"
         android:layout_marginEnd="66dp" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Record"
+        android:id="@+id/video_button"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"/>
 
     <SeekBar
         android:layout_width="150dp"
@@ -28,6 +37,5 @@
         android:id="@+id/speedometer"
         android:layout_above="@+id/gmeter"
         android:layout_alignParentRight="true"/>
-
 
 </RelativeLayout>
