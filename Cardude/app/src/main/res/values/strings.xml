@@ -6,4 +6,19 @@
     <string name="null_speed"> -- </string>
 
     <string name="kmh">km/h</string>
+
+    <string name="video_alert_title">Video Recording Error</string>
+    <string name="video_alert_body">
+        Error occurred during initialization of video recording:\n\n
+        %s\n\n
+        Video of this drive will not be available but other parameters will still be recorded.
+    </string>
+
+    <string name="photo_alert_title">Photo Capture Error</string>
+    <string name="photo_alert_body">
+        Error occurred during photo capture:\n\n
+        %s
+    </string>
+
+    <string name="no_ext_storage">External storage directory not mounted.</string>
 </resources>

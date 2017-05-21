@@ -1,5 +1,6 @@
 package sudo_g.cardude;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
@@ -10,7 +11,6 @@ import java.util.List;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 import android.content.Context;
-import android.os.Handler;
 import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
 import android.util.AttributeSet;
@@ -21,9 +21,12 @@ import sudo_g.cardude.OrientationManager.DeviceOrientation;
 
 public class CameraSurface extends SurfaceView
 {
-    private DeviceOrientation mCurrentRotation = DeviceOrientation.PORTRAIT;
+    interface Listener
+    {
+        public void onTakePictureError(String message);
+    }
 
-    private final Handler mHandler = new Handler();
+    private DeviceOrientation mCurrentRotation = DeviceOrientation.PORTRAIT;
 
     private volatile boolean previewing = false;
     private int mCamIndex = -1;
@@ -91,17 +94,9 @@ public class CameraSurface extends SurfaceView
         }
     };
 
+    private Listener mListener;
+
     private final Lock mCapturePreviewLock = new ReentrantLock();    // keeps preview flag synchronized
-    private final Camera.PictureCallback mCaptureJpegEvent = new Camera.PictureCallback()
-    {
-        public void onPictureTaken(byte[] data, Camera camera)
-        {
-            mCapturePreviewLock.lock();
-            mCamera.startPreview();
-            previewing = true;
-            mCapturePreviewLock.unlock();
-        }
-    };
 
     public CameraSurface(Context context)
     {
@@ -123,10 +118,13 @@ public class CameraSurface extends SurfaceView
 
     /**
      * Setup all other resources required by this view.
+     *
+     * @param listener Callback for this class' events.
      */
-    public void start()
+    public void start(Listener listener)
     {
         mSurfaceHolder.addCallback(mSurfaceHolderEvents);
+        mListener = listener;
     }
 
     public void stop()
@@ -144,7 +142,7 @@ public class CameraSurface extends SurfaceView
         mCurrentRotation = rotation;
     }
 
-    public boolean takePicture()
+    public boolean takePicture(final MediaFileManager fileManager)
     {
         if (!previewing)
         {
@@ -153,7 +151,32 @@ public class CameraSurface extends SurfaceView
         else
         {
             mCapturePreviewLock.lock();
-            mCamera.takePicture(null, null, mCaptureJpegEvent);
+            mCamera.takePicture(null, null,
+                new Camera.PictureCallback()
+                {
+                    public void onPictureTaken(byte[] data, Camera camera)
+                    {
+                        mCapturePreviewLock.lock();
+                        mCamera.startPreview();
+                        previewing = true;
+                        mCapturePreviewLock.unlock();
+
+                        try
+                        {
+                            FileOutputStream stream = fileManager.getPhotoInputStream();
+                            stream.write(data);
+                            stream.close();
+                        }
+                        catch (IOException e)
+                        {
+                            if (mListener != null)
+                            {
+                                mListener.onTakePictureError(e.getMessage());
+                            }
+                        }
+                    }
+                }
+            );
             previewing = false;    // preview stops when picture is taken
             mCapturePreviewLock.unlock();
 
@@ -161,7 +184,14 @@ public class CameraSurface extends SurfaceView
         }
     }
 
-    public boolean startRecordVideo(VideoFileManager fileManager) throws IOException
+    /**
+     * Start video capture to buffer.
+     *
+     * @param fileManager
+     * @throws IOException if failed to create file for recording.
+     * @throws IllegalStateException if camera instance is invalid.
+     */
+    public void startRecordVideo(MediaFileManager fileManager) throws IOException, IllegalStateException
     {
         if (mCamera != null)
         {
@@ -178,35 +208,26 @@ public class CameraSurface extends SurfaceView
 
             try
             {
-                recorder.setOutputFile(fileManager.getInputStream());
+                recorder.setOutputFile(fileManager.getVideoInputStream().getFD());
+                recorder.prepare();
             }
-            catch (IOException e)
+            catch (IOException fileErr)
             {
                 mCamera.reconnect();
-                throw e;
+                throw fileErr;
             }
 
-            recorder.prepare();
             recorder.start();
-
-            mHandler.postDelayed(
-                new Runnable()
-                {
-                    public void run()
-                    {
-                        recorder.stop();
-                        recorder.release();
-                    }
-                },
-                10000
-            );
-
-            return true;
         }
         else
         {
-            return false;
+            throw new IllegalStateException("Camera instance is invalid");
         }
+    }
+
+    public void captureLastVideoBuffer()
+    {
+
     }
 
     @Override

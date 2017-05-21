@@ -3,7 +3,6 @@ package sudo_g.cardude;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.graphics.PixelFormat;
-import android.provider.MediaStore;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -29,14 +28,26 @@ public class CameraActivity extends ActionBarActivity {
         }
     };
     private OrientationManager mOrientationManager;
-    private final VideoFileManager mFileManager = new VideoFileManager(this);
+    private final MediaFileManager mFileManager = new MediaFileManager(this);
 
+    private CameraSurface.Listener mCameraSurfaceListener = new CameraSurface.Listener()
+    {
+        public void onTakePictureError(String message)
+        {
+            mPhotoErrorAlert
+                .setMessage(String.format(getString(R.string.photo_alert_body), message))
+                .show();
+        }
+    };
     private CameraSurface mCameraSurface;
+
     private Button mSnapshotButton;
     private Button mVideoButton;
+
     private final GMeter mGMeter = new GMeter(this);
     private Speedometer mSpeedometer;
-    private AlertDialog.Builder mAlertDialog;
+    private AlertDialog.Builder mVideoErrorAlert;
+    private AlertDialog.Builder mPhotoErrorAlert;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -45,11 +56,13 @@ public class CameraActivity extends ActionBarActivity {
         setContentView(R.layout.activity_camera);
         getWindow().setFormat(PixelFormat.UNKNOWN);
 
+        initializeAlertDialogs();
+
         mOrientationManager = new OrientationManager(this, mOrientationListener);
 
         // start camera
         mCameraSurface = (CameraSurface) findViewById(R.id.camerapreview);
-        mCameraSurface.start();
+        mCameraSurface.start(mCameraSurfaceListener);
 
         // add overlays
         controlInflater = LayoutInflater.from(getBaseContext());
@@ -66,7 +79,8 @@ public class CameraActivity extends ActionBarActivity {
             {
                 public void onClick(View v)
                 {
-                    mCameraSurface.takePicture();
+                    // error handling is asynchronous, done by CameraSurface.Listener
+                    mCameraSurface.takePicture(mFileManager);
                 }
             }
         );
@@ -81,9 +95,17 @@ public class CameraActivity extends ActionBarActivity {
                     {
                         mCameraSurface.startRecordVideo(mFileManager);
                     }
-                    catch (IOException e)
+                    catch (IOException e1)
                     {
-                        mAlertDialog.show();
+                        mVideoErrorAlert
+                            .setMessage(String.format(getString(R.string.video_alert_body), e1.getMessage()))
+                            .show();
+                    }
+                    catch (IllegalStateException e2)
+                    {
+                        mVideoErrorAlert
+                            .setMessage(String.format(getString(R.string.video_alert_body), e2.getMessage()))
+                            .show();
                     }
                 }
             }
@@ -92,16 +114,6 @@ public class CameraActivity extends ActionBarActivity {
         mGMeter.bindGuiElement((SeekBar) findViewById(R.id.gmeter));
         mSpeedometer = (Speedometer) findViewById(R.id.speedometer);
 
-        // create error dialog
-        mAlertDialog = new AlertDialog.Builder(this)
-                .setTitle("Video Recording Error")
-                .setMessage("Could not create video file.")
-                .setNeutralButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        // continue with delete
-                    }
-                })
-                .setIcon(android.R.drawable.ic_dialog_alert);
     }
 
     @Override
@@ -149,5 +161,38 @@ public class CameraActivity extends ActionBarActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void initializeAlertDialogs()
+    {
+        // create video error dialog
+        mVideoErrorAlert = new AlertDialog.Builder(this)
+            .setTitle(getString(R.string.video_alert_title))
+            .setNeutralButton(
+                    android.R.string.yes,
+                    new DialogInterface.OnClickListener()
+                    {
+                        public void onClick(DialogInterface dialog, int which) {
+
+                        }
+                    }
+            )
+            .setIcon(android.R.drawable.ic_dialog_alert);
+
+
+        // create photo error dialogs
+        mPhotoErrorAlert = new AlertDialog.Builder(this)
+            .setTitle(getString(R.string.photo_alert_title))
+            .setNeutralButton(
+                    android.R.string.yes,
+                    new DialogInterface.OnClickListener()
+                    {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+
+                        }
+                    }
+            )
+            .setIcon(android.R.drawable.ic_dialog_alert);
     }
 }
