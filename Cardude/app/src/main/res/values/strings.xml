@@ -7,6 +7,12 @@
 
     <string name="kmh">km/h</string>
 
+    <!-- Buttons -->
+    <string name="snapshot_button">Photo</string>
+    <string name="video_button">Record</string>
+    <string name="drive_button">Start</string>
+
+    <!-- Error dialog messages -->
     <string name="video_alert_title">Video Recording Error</string>
     <string name="video_alert_body">
         Error occurred during initialization of video recording:\n\n
@@ -21,4 +27,5 @@
     </string>
 
     <string name="no_ext_storage">External storage directory not mounted.</string>
+    <string name="no_cam_instance">Camera instance invalid.</string>
 </resources>
