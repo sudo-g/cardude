@@ -1,6 +1,5 @@
 package sudo_g.cardude;
 
-import android.app.Activity;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -44,7 +43,7 @@ public class GMeter
         }
     };
 
-    private Activity mHostActivity;
+    private Context mContext;
     private final Handler mGuiUpdater = new Handler();
     private final Runnable mGuiTask = new Runnable()
     {
@@ -62,15 +61,15 @@ public class GMeter
         }
     };
 
-    public GMeter(Activity host)
+    public GMeter(Context context)
     {
-        mHostActivity = host;
+        mContext = context;
     }
 
     public void start()
     {
 
-        mSensorManager = (SensorManager) mHostActivity.getSystemService(Context.SENSOR_SERVICE);
+        mSensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         mSensorManager.registerListener(mSensorCallbacks, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
 
