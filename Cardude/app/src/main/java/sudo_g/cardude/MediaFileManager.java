@@ -16,10 +16,27 @@ import java.util.Locale;
 
 public class MediaFileManager
 {
+    private static MediaFileManager singletonMediaFileManager;
+
     private Context mContext;
     private File mInputFile;
 
-    public MediaFileManager(Context context)
+    /**
+     * Gets a handle to the file manager.
+     *
+     * @param context Application context.
+     * @return Handle to the manager.
+     */
+    public static MediaFileManager getFileManager(Context context)
+    {
+        if (singletonMediaFileManager == null)
+        {
+            singletonMediaFileManager = new MediaFileManager(context);
+        }
+        return singletonMediaFileManager;
+    }
+
+    private MediaFileManager(Context context)
     {
         mContext = context;
     }
@@ -34,7 +51,7 @@ public class MediaFileManager
     {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss", Locale.UK);
         String fileName = sdf.format(new Date());
-        if (Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED)
+        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
         {
             String fileNameExt = String.format("/%s.jpg", fileName);
             String fullPath = Environment.getExternalStorageDirectory().getAbsolutePath() + fileNameExt;
@@ -51,12 +68,12 @@ public class MediaFileManager
     /**
      * Gets an input stream for writing video data to.
      *
-     * @return
-     * @throws IOException
+     * @return Stream to write video data to.
+     * @throws IOException Error during file creation.
      */
     public FileOutputStream getVideoInputStream() throws IOException
     {
-        if (Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED)
+        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
         {
             mInputFile = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/testvideo.mp4");
             Log.d("MediaFileManager", mInputFile.getAbsolutePath());

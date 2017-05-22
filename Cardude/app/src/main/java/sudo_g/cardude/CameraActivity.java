@@ -28,7 +28,8 @@ public class CameraActivity extends ActionBarActivity {
         }
     };
     private OrientationManager mOrientationManager;
-    private final MediaFileManager mFileManager = new MediaFileManager(this);
+    private final LocationService mLocationService = LocationService.getLocationService(this);
+    private final MediaFileManager mFileManager = MediaFileManager.getFileManager(this);
 
     private CameraSurface.Listener mCameraSurfaceListener = new CameraSurface.Listener()
     {
@@ -43,6 +44,7 @@ public class CameraActivity extends ActionBarActivity {
 
     private Button mSnapshotButton;
     private Button mVideoButton;
+    private Button mDriveButton;
 
     private final GMeter mGMeter = new GMeter(this);
     private Speedometer mSpeedometer;
@@ -59,6 +61,7 @@ public class CameraActivity extends ActionBarActivity {
         initializeAlertDialogs();
 
         mOrientationManager = new OrientationManager(this, mOrientationListener);
+        mLocationService.start();
 
         // start camera
         mCameraSurface = (CameraSurface) findViewById(R.id.camerapreview);
@@ -72,6 +75,32 @@ public class CameraActivity extends ActionBarActivity {
             LayoutParams.MATCH_PARENT
         );
         this.addContentView(viewControl, layoutParamsControl);
+
+        mDriveButton = (Button) findViewById(R.id.start_button);
+        mDriveButton.setOnClickListener(
+            new View.OnClickListener()
+            {
+                public void onClick(View v)
+                {
+                    try
+                    {
+                        mCameraSurface.startRecordVideo(mFileManager);
+                    }
+                    catch (IOException e1)
+                    {
+                        mVideoErrorAlert
+                                .setMessage(String.format(getString(R.string.video_alert_body), e1.getMessage()))
+                                .show();
+                    }
+                    catch (IllegalStateException e2)
+                    {
+                        mVideoErrorAlert
+                                .setMessage(String.format(getString(R.string.video_alert_body), e2.getMessage()))
+                                .show();
+                    }
+                }
+            }
+        );
 
         mSnapshotButton = (Button) findViewById(R.id.snapshotbutton);
         mSnapshotButton.setOnClickListener(
@@ -91,22 +120,7 @@ public class CameraActivity extends ActionBarActivity {
             {
                 public void onClick(View v)
                 {
-                    try
-                    {
-                        mCameraSurface.startRecordVideo(mFileManager);
-                    }
-                    catch (IOException e1)
-                    {
-                        mVideoErrorAlert
-                            .setMessage(String.format(getString(R.string.video_alert_body), e1.getMessage()))
-                            .show();
-                    }
-                    catch (IllegalStateException e2)
-                    {
-                        mVideoErrorAlert
-                            .setMessage(String.format(getString(R.string.video_alert_body), e2.getMessage()))
-                            .show();
-                    }
+                    mCameraSurface.captureLastVideoBuffer();
                 }
             }
         );
@@ -124,7 +138,7 @@ public class CameraActivity extends ActionBarActivity {
         mOrientationManager.start();
 
         mGMeter.start();
-        mSpeedometer.start();
+        mSpeedometer.start(mLocationService);
     }
 
     @Override

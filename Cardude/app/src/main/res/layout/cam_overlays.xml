@@ -5,7 +5,7 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Snapshot"
+        android:text="@string/snapshot_button"
         android:id="@+id/snapshotbutton"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
@@ -16,11 +16,19 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Record"
+        android:text="@string/video_button"
         android:id="@+id/video_button"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:text="@string/drive_button"
+        android:id="@+id/start_button"
+        android:layout_below="@+id/gmeter" />
 
     <SeekBar
         android:layout_width="150dp"

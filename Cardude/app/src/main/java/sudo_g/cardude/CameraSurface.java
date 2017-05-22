@@ -21,7 +21,7 @@ import sudo_g.cardude.OrientationManager.DeviceOrientation;
 
 public class CameraSurface extends SurfaceView
 {
-    interface Listener
+    public interface Listener
     {
         public void onTakePictureError(String message);
     }
@@ -221,7 +221,7 @@ public class CameraSurface extends SurfaceView
         }
         else
         {
-            throw new IllegalStateException("Camera instance is invalid");
+            throw new IllegalStateException(getContext().getString(R.string.no_cam_instance));
         }
     }
 
