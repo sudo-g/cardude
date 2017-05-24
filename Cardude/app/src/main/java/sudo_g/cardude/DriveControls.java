@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RelativeLayout;
+import android.widget.SeekBar;
 
 public class DriveControls extends RelativeLayout
 {
@@ -59,11 +60,15 @@ public class DriveControls extends RelativeLayout
     public void start(LocationService locationService)
     {
         mLocationService = locationService;
+
+        mGMeter.start();
+        mSpeedometer.start(mLocationService);
     }
 
     public void stop()
     {
-
+        mGMeter.stop();
+        mSpeedometer.stop();
     }
 
     public void setRotationAngle(OrientationManager.DeviceOrientation rotation)
@@ -85,6 +90,9 @@ public class DriveControls extends RelativeLayout
         View layout = inflater.inflate(R.layout.cam_overlays, this);
 
         mGMeter = new GMeter(getContext());
+        mGMeter.bindGuiElement((SeekBar) findViewById(R.id.gmeter));
+
+        mSpeedometer = (Speedometer) layout.findViewById(R.id.speedometer);
 
         mDriveButton = (Button) layout.findViewById(R.id.start_button);
         mDriveButton.setOnClickListener(
