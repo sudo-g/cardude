@@ -8,10 +8,6 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup.LayoutParams;
-import android.widget.Button;
-import android.widget.SeekBar;
 
 import java.io.IOException;
 
@@ -19,18 +15,20 @@ public class CameraActivity extends ActionBarActivity {
 
     LayoutInflater controlInflater = null;
 
+    private OrientationManager mOrientationManager;
     private OrientationManager.Listener mOrientationListener = new OrientationManager.Listener()
     {
         public void onOrientationChanged(OrientationManager.DeviceOrientation orientation)
         {
             mCameraSurface.setRotationAngle(orientation);
-            mGMeter.setRotationAngle(orientation);
+            mDriveControls.setRotationAngle(orientation);
         }
     };
-    private OrientationManager mOrientationManager;
+
     private final LocationService mLocationService = LocationService.getLocationService(this);
     private final MediaFileManager mFileManager = MediaFileManager.getFileManager(this);
 
+    private CameraSurface mCameraSurface;
     private CameraSurface.Listener mCameraSurfaceListener = new CameraSurface.Listener()
     {
         public void onTakePictureError(String message)
@@ -40,14 +38,42 @@ public class CameraActivity extends ActionBarActivity {
                 .show();
         }
     };
-    private CameraSurface mCameraSurface;
 
-    private Button mSnapshotButton;
-    private Button mVideoButton;
-    private Button mDriveButton;
+    private DriveControls mDriveControls;
+    private DriveControls.Listener mDriveControlsListener = new DriveControls.Listener()
+    {
+        public void takePictureRequest()
+        {
+            // error handling is asynchronous, done by CameraSurface.Listener
+            mCameraSurface.takePicture(mFileManager);
+        }
 
-    private final GMeter mGMeter = new GMeter(this);
-    private Speedometer mSpeedometer;
+        public void captureLastVideoBufferRequest()
+        {
+            // stop the video for now
+        }
+
+        public void onDriveStart()
+        {
+            try
+            {
+                mCameraSurface.startRecordVideo(mFileManager);
+            }
+            catch (IOException fileErr)
+            {
+                mVideoErrorAlert
+                        .setMessage(String.format(getString(R.string.video_alert_body), fileErr.getMessage()))
+                        .show();
+            }
+            catch (IllegalStateException camErr)
+            {
+                mVideoErrorAlert
+                        .setMessage(String.format(getString(R.string.video_alert_body), camErr.getMessage()))
+                        .show();
+            }
+        }
+    };
+
     private AlertDialog.Builder mVideoErrorAlert;
     private AlertDialog.Builder mPhotoErrorAlert;
 
@@ -61,73 +87,14 @@ public class CameraActivity extends ActionBarActivity {
         initializeAlertDialogs();
 
         mOrientationManager = new OrientationManager(this, mOrientationListener);
-        mLocationService.start();
 
         // start camera
-        mCameraSurface = (CameraSurface) findViewById(R.id.camerapreview);
+        mCameraSurface = (CameraSurface) findViewById(R.id.camera_preview);
         mCameraSurface.start(mCameraSurfaceListener);
 
         // add overlays
-        controlInflater = LayoutInflater.from(getBaseContext());
-        View viewControl = controlInflater.inflate(R.layout.cam_overlays, null);
-        LayoutParams layoutParamsControl = new LayoutParams(
-            LayoutParams.MATCH_PARENT,
-            LayoutParams.MATCH_PARENT
-        );
-        this.addContentView(viewControl, layoutParamsControl);
-
-        mDriveButton = (Button) findViewById(R.id.start_button);
-        mDriveButton.setOnClickListener(
-            new View.OnClickListener()
-            {
-                public void onClick(View v)
-                {
-                    try
-                    {
-                        mCameraSurface.startRecordVideo(mFileManager);
-                    }
-                    catch (IOException e1)
-                    {
-                        mVideoErrorAlert
-                                .setMessage(String.format(getString(R.string.video_alert_body), e1.getMessage()))
-                                .show();
-                    }
-                    catch (IllegalStateException e2)
-                    {
-                        mVideoErrorAlert
-                                .setMessage(String.format(getString(R.string.video_alert_body), e2.getMessage()))
-                                .show();
-                    }
-                }
-            }
-        );
-
-        mSnapshotButton = (Button) findViewById(R.id.snapshotbutton);
-        mSnapshotButton.setOnClickListener(
-            new View.OnClickListener()
-            {
-                public void onClick(View v)
-                {
-                    // error handling is asynchronous, done by CameraSurface.Listener
-                    mCameraSurface.takePicture(mFileManager);
-                }
-            }
-        );
-
-        mVideoButton = (Button) findViewById(R.id.video_button);
-        mVideoButton.setOnClickListener(
-            new View.OnClickListener()
-            {
-                public void onClick(View v)
-                {
-                    mCameraSurface.captureLastVideoBuffer();
-                }
-            }
-        );
-
-        mGMeter.bindGuiElement((SeekBar) findViewById(R.id.gmeter));
-        mSpeedometer = (Speedometer) findViewById(R.id.speedometer);
-
+        mDriveControls = (DriveControls) findViewById(R.id.drive_controls);
+        mDriveControls.setEventListener(mDriveControlsListener);
     }
 
     @Override
@@ -135,10 +102,9 @@ public class CameraActivity extends ActionBarActivity {
     {
         super.onResume();
 
+        mLocationService.start();
         mOrientationManager.start();
-
-        mGMeter.start();
-        mSpeedometer.start(mLocationService);
+        mDriveControls.start(mLocationService);
     }
 
     @Override
@@ -146,10 +112,9 @@ public class CameraActivity extends ActionBarActivity {
     {
         super.onPause();
 
+        mDriveControls.stop();
         mOrientationManager.stop();
-
-        mGMeter.stop();
-        mSpeedometer.stop();
+        mLocationService.stop();
     }
 
     @Override

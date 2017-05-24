@@ -7,9 +7,14 @@
     android:background="@android:color/black" >
 
     <sudo_g.cardude.CameraSurface
-        android:id="@+id/camerapreview"
+        android:id="@+id/camera_preview"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
     />
+
+    <sudo_g.cardude.DriveControls
+        android:id="@+id/drive_controls"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" />
 
 </RelativeLayout>
