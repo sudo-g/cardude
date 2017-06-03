@@ -30,20 +30,18 @@
         android:id="@+id/start_button"
         android:layout_below="@+id/gmeter" />
 
-    <SeekBar
-        android:layout_width="150dp"
+    <sudo_g.cardude.GMeter
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/gmeter"
         android:layout_above="@+id/snapshotbutton"
         android:layout_centerHorizontal="true"
-        android:max="@integer/gmeter_resolution"
-        android:progressDrawable="@android:color/transparent" />
+        android:id="@+id/gmeter"/>
 
     <sudo_g.cardude.Speedometer
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/speedometer"
-        android:layout_above="@+id/gmeter"
+        android:layout_alignTop="@+id/gmeter"
         android:layout_alignParentRight="true"/>
 
 </RelativeLayout>

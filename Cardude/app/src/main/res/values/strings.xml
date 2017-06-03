@@ -12,6 +12,8 @@
     <string name="video_button">Record</string>
     <string name="drive_button">Start</string>
 
+    <string name="tick_mark">.</string>
+
     <!-- Error dialog messages -->
     <string name="video_alert_title">Video Recording Error</string>
     <string name="video_alert_body">

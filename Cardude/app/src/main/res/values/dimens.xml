@@ -7,4 +7,6 @@
 
     <dimen name="gmeter_analog_margin_top">40dp</dimen>
     <dimen name="gmeter_width">150dp</dimen>
+    <dimen name="gmeter_tick_text">10dp</dimen>
+    <dimen name="gmeter_tick_mark">10dp</dimen>
 </resources>

@@ -89,8 +89,7 @@ public class DriveControls extends RelativeLayout
         LayoutInflater inflater = LayoutInflater.from(getContext());
         View layout = inflater.inflate(R.layout.cam_overlays, this);
 
-        mGMeter = new GMeter(getContext());
-        mGMeter.bindGuiElement((SeekBar) findViewById(R.id.gmeter));
+        mGMeter = (GMeter) layout.findViewById(R.id.gmeter);
 
         mSpeedometer = (Speedometer) layout.findViewById(R.id.speedometer);
 
