@@ -18,7 +18,7 @@ import sudo_g.cardude.OrientationManager.DeviceOrientation;
 
 public class GMeter extends RelativeLayout
 {
-    private static final int MAX_ACC_MS2 = 10;
+    private static final float MAX_ACC_MS2 = 9.81F;
     private static final int GUI_UPDATE_INTERVAL_MS = 30;
     private static final float MS2_PER_G = 9.81F;
 
@@ -64,7 +64,7 @@ public class GMeter extends RelativeLayout
                 float localAccX = correctForRotation(mLocalAcc, mRotationAngle)[0];
 
                 final int barCenterOffset = mAnalogIndicator.getMax() / 2;
-                int seekBarProgress = (int) -localAccX * mAnalogIndicator.getMax() / MAX_ACC_MS2 + barCenterOffset;
+                int seekBarProgress = (int) (-localAccX * mAnalogIndicator.getMax() / 2 / MAX_ACC_MS2 + barCenterOffset);
                 mAnalogIndicator.setProgress(seekBarProgress);
 
                 float digitalValue = localAccX / MS2_PER_G;
@@ -182,9 +182,30 @@ public class GMeter extends RelativeLayout
         mTickMarks[3] = (TextView) layout.findViewById(R.id.g_tick_right);
 
         mNumMarks[0] = (TextView) layout.findViewById(R.id.g_num_left);
+        mNumMarks[0].setText(formatTickText(MAX_ACC_MS2 / MS2_PER_G));
+
         mNumMarks[1] = (TextView) layout.findViewById(R.id.g_num_midleft);
+        mNumMarks[1].setText(formatTickText(MAX_ACC_MS2 / MS2_PER_G / 2));
+
         mNumMarks[2] = (TextView) layout.findViewById(R.id.g_num_center);
+        mNumMarks[2].setText(formatTickText(0));
+
         mNumMarks[3] = (TextView) layout.findViewById(R.id.g_num_midright);
+        mNumMarks[3].setText(formatTickText(MAX_ACC_MS2 / MS2_PER_G / 2));
+
         mNumMarks[4] = (TextView) layout.findViewById(R.id.g_num_right);
+        mNumMarks[4].setText(formatTickText(MAX_ACC_MS2 / MS2_PER_G));
+    }
+
+    private String formatTickText(float value)
+    {
+        if (value < 1.0)
+        {
+            return String.format("%.1f", value);
+        }
+        else
+        {
+            return String.format("%.0f", value);
+        }
     }
 }
