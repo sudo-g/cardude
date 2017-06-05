@@ -10,7 +10,8 @@
     <!-- Buttons -->
     <string name="snapshot_button">Photo</string>
     <string name="video_button">Record</string>
-    <string name="drive_button">Start</string>
+    <string name="drive_button_start">Start</string>
+    <string name="drive_button_stop">Stop</string>
 
     <string name="tick_mark">.</string>
 

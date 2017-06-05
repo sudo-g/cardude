@@ -6,7 +6,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RelativeLayout;
-import android.widget.SeekBar;
 
 public class DriveControls extends RelativeLayout
 {
@@ -18,9 +17,16 @@ public class DriveControls extends RelativeLayout
         public void takePictureRequest();
 
         /**
-         * Called when a drive is started.
+         * Called when a request to start driving is initiated.
+         *
+         * @return True if the request was successful, false otherwise.
          */
-        public void onDriveStart();
+        public boolean onDriveStart();
+
+        /**
+         * Called when a request to stop driving is initiated.
+         */
+        public void onDriveStop();
 
         /**
          * Called when a request to record the last few seconds of captured video is requested.
@@ -35,6 +41,8 @@ public class DriveControls extends RelativeLayout
     private Button mSnapshotButton;
     private Button mVideoButton;
     private Button mDriveButton;
+
+    private boolean mIsDriving = false;
 
     private GMeter mGMeter;
     private Speedometer mSpeedometer;
@@ -101,7 +109,20 @@ public class DriveControls extends RelativeLayout
                 {
                     if (mListener != null)
                     {
-                        mListener.onDriveStart();
+                        if (mIsDriving)
+                        {
+                            mListener.onDriveStop();
+                            mIsDriving = false;
+                            mDriveButton.setText(getContext().getString(R.string.drive_button_start));
+                        }
+                        else
+                        {
+                            if (mListener.onDriveStart())
+                            {
+                                mIsDriving = true;
+                                mDriveButton.setText(getContext().getString(R.string.drive_button_stop));
+                            }
+                        }
                     }
                 }
             }

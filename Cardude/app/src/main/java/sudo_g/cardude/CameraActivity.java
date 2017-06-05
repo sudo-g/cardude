@@ -53,24 +53,32 @@ public class CameraActivity extends ActionBarActivity {
             // stop the video for now
         }
 
-        public void onDriveStart()
+        public boolean onDriveStart()
         {
             try
             {
                 mCameraSurface.startRecordVideo(mFileManager);
+                return true;
             }
             catch (IOException fileErr)
             {
                 mVideoErrorAlert
                         .setMessage(String.format(getString(R.string.video_alert_body), fileErr.getMessage()))
                         .show();
+                return false;
             }
             catch (IllegalStateException camErr)
             {
                 mVideoErrorAlert
                         .setMessage(String.format(getString(R.string.video_alert_body), camErr.getMessage()))
                         .show();
+                return false;
             }
+        }
+
+        public void onDriveStop()
+        {
+            mCameraSurface.stopRecordVideo();
         }
     };
 

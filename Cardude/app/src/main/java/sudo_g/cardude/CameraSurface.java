@@ -34,6 +34,7 @@ public class CameraSurface extends SurfaceView
     private List<Camera.Size> mSupportedPreviewSizes;
     private Camera.Size mPreviewSize;
 
+    private MediaRecorder mMediaRecorder;
     private List<Camera.Size> mSupportedVideoSizes;
     private Camera.Size mSelectedVideoSize;
 
@@ -195,21 +196,21 @@ public class CameraSurface extends SurfaceView
     {
         if (mCamera != null)
         {
-            final MediaRecorder recorder = new MediaRecorder();
+            mMediaRecorder = new MediaRecorder();
             mCamera.unlock();
-            recorder.setCamera(mCamera);
-            recorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
-            recorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
+            mMediaRecorder.setCamera(mCamera);
+            mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
+            mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
 
             CamcorderProfile profile = CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH);
             profile.videoFrameWidth = mSelectedVideoSize.width;
             profile.videoFrameHeight = mSelectedVideoSize.height;
-            recorder.setProfile(profile);
+            mMediaRecorder.setProfile(profile);
 
             try
             {
-                recorder.setOutputFile(fileManager.getVideoInputStream().getFD());
-                recorder.prepare();
+                mMediaRecorder.setOutputFile(fileManager.getVideoInputStream().getFD());
+                mMediaRecorder.prepare();
             }
             catch (IOException fileErr)
             {
@@ -217,7 +218,7 @@ public class CameraSurface extends SurfaceView
                 throw fileErr;
             }
 
-            recorder.start();
+            mMediaRecorder.start();
         }
         else
         {
@@ -228,6 +229,11 @@ public class CameraSurface extends SurfaceView
     public void captureLastVideoBuffer()
     {
 
+    }
+
+    public void stopRecordVideo()
+    {
+        mMediaRecorder.stop();
     }
 
     @Override
