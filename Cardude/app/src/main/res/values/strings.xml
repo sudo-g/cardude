@@ -30,5 +30,6 @@
     </string>
 
     <string name="no_ext_storage">External storage directory not mounted.</string>
+    <string name="photo_dir_error">Could not write to photo storage directory</string>
     <string name="no_cam_instance">Camera instance invalid.</string>
 </resources>

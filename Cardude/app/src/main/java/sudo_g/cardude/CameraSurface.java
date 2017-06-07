@@ -165,8 +165,11 @@ public class CameraSurface extends SurfaceView
                         try
                         {
                             FileOutputStream stream = fileManager.getPhotoInputStream();
-                            stream.write(data);
-                            stream.close();
+                            if (stream != null)
+                            {
+                                stream.write(data);
+                                stream.close();
+                            }
                         }
                         catch (IOException e)
                         {

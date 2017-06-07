@@ -2,12 +2,8 @@ package sudo_g.cardude;
 
 import android.content.Context;
 import android.os.Environment;
-import android.util.Log;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileDescriptor;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -16,6 +12,8 @@ import java.util.Locale;
 
 public class MediaFileManager
 {
+    private static final String DEFAULT_PHOTO_PATH_FROM_EXT = "cardude/photos";
+
     private static MediaFileManager singletonMediaFileManager;
 
     private Context mContext;
@@ -53,16 +51,32 @@ public class MediaFileManager
         String fileName = sdf.format(new Date());
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
         {
-            String fileNameExt = String.format("/%s.jpg", fileName);
-            String fullPath = Environment.getExternalStorageDirectory().getAbsolutePath() + fileNameExt;
-            File file = new File(fullPath);
-            Log.d("MediaFileManager", file.getAbsolutePath());
-            return new FileOutputStream(file);
+            String photoStorageLocationPath = String.format("%s/%s",
+                    Environment.getExternalStorageDirectory().getAbsoluteFile(),
+                    DEFAULT_PHOTO_PATH_FROM_EXT
+            );
+            File photoStorageLocation = new File(photoStorageLocationPath);
+            if (!photoStorageLocation.exists())
+            {
+                if (photoStorageLocation.mkdirs())
+                {
+                    String fileNameExt = String.format("/%s.jpg", fileName);
+                    String fullPath = String.format("%s/%s", photoStorageLocationPath, fileNameExt);
+                    File file = new File(fullPath);
+                    return new FileOutputStream(file);
+                }
+                else
+                {
+                    throw new IOException(mContext.getString(R.string.photo_dir_error));
+                }
+            }
         }
         else
         {
             throw new IOException(mContext.getString(R.string.no_ext_storage));
         }
+
+        return null;
     }
 
     /**
@@ -76,7 +90,6 @@ public class MediaFileManager
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
         {
             mInputFile = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/testvideo.mp4");
-            Log.d("MediaFileManager", mInputFile.getAbsolutePath());
             mInputFile.createNewFile();
             return new FileOutputStream(mInputFile);
         }
