@@ -13,6 +13,7 @@ import android.hardware.Camera.CameraInfo;
 import android.content.Context;
 import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
+import android.os.Handler;
 import android.util.AttributeSet;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -26,6 +27,8 @@ public class CameraSurface extends SurfaceView
         public void onTakePictureError(String message);
     }
 
+    private static final int CIRCULAR_BUFFER_LENGTH_MS = 5000;
+
     private DeviceOrientation mCurrentRotation = DeviceOrientation.PORTRAIT;
 
     private volatile boolean previewing = false;
@@ -34,9 +37,34 @@ public class CameraSurface extends SurfaceView
     private List<Camera.Size> mSupportedPreviewSizes;
     private Camera.Size mPreviewSize;
 
+    private boolean mRecording = false;
     private MediaRecorder mMediaRecorder;
     private List<Camera.Size> mSupportedVideoSizes;
     private Camera.Size mSelectedVideoSize;
+    private MediaFileManager mMediaFileManager;     // TODO: Change circular buffer implementation
+    private Handler mVideoBufferHandler = new Handler();
+    private Runnable mVideoShuffleTask = new Runnable()
+    {
+        @Override
+        public void run()
+        {
+            mMediaRecorder.stop();
+            try
+            {
+                prepareMediaRecorder(mMediaFileManager);
+                if (mRecording)
+                {
+                    mVideoBufferHandler.postDelayed(this, CIRCULAR_BUFFER_LENGTH_MS);
+                }
+            }
+            catch (IOException e)
+            {
+                // this won't be how circular video buffer is implemented in long term
+                e.printStackTrace();
+            }
+
+        }
+    };
 
     private SurfaceHolder mSurfaceHolder;
     private final SurfaceHolder.Callback mSurfaceHolderEvents = new SurfaceHolder.Callback()
@@ -197,36 +225,9 @@ public class CameraSurface extends SurfaceView
      */
     public void startRecordVideo(MediaFileManager fileManager) throws IOException, IllegalStateException
     {
-        if (mCamera != null)
-        {
-            mMediaRecorder = new MediaRecorder();
-            mCamera.unlock();
-            mMediaRecorder.setCamera(mCamera);
-            mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
-            mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
-
-            CamcorderProfile profile = CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH);
-            profile.videoFrameWidth = mSelectedVideoSize.width;
-            profile.videoFrameHeight = mSelectedVideoSize.height;
-            mMediaRecorder.setProfile(profile);
-
-            try
-            {
-                mMediaRecorder.setOutputFile(fileManager.getVideoInputStream().getFD());
-                mMediaRecorder.prepare();
-            }
-            catch (IOException fileErr)
-            {
-                mCamera.reconnect();
-                throw fileErr;
-            }
-
-            mMediaRecorder.start();
-        }
-        else
-        {
-            throw new IllegalStateException(getContext().getString(R.string.no_cam_instance));
-        }
+        mRecording = true;
+        prepareMediaRecorder(fileManager);
+        mVideoBufferHandler.postDelayed(mVideoShuffleTask, CIRCULAR_BUFFER_LENGTH_MS);
     }
 
     public void captureLastVideoBuffer()
@@ -236,7 +237,10 @@ public class CameraSurface extends SurfaceView
 
     public void stopRecordVideo()
     {
+        mRecording = false;
+        mVideoBufferHandler.removeCallbacks(mVideoShuffleTask);
         mMediaRecorder.stop();
+        mMediaFileManager = null;
     }
 
     @Override
@@ -276,6 +280,41 @@ public class CameraSurface extends SurfaceView
         {
             // reverting to default view behavior
             super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        }
+    }
+
+    private void prepareMediaRecorder(MediaFileManager fileManager) throws IOException
+    {
+        if (mCamera != null)
+        {
+            mMediaFileManager = fileManager;
+            mMediaRecorder = new MediaRecorder();
+            mCamera.unlock();
+            mMediaRecorder.setCamera(mCamera);
+            mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
+            mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
+
+            CamcorderProfile profile = CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH);
+            profile.videoFrameWidth = mSelectedVideoSize.width;
+            profile.videoFrameHeight = mSelectedVideoSize.height;
+            mMediaRecorder.setProfile(profile);
+
+            try
+            {
+                mMediaRecorder.setOutputFile(mMediaFileManager.getVideoFD().getAbsolutePath());
+                mMediaRecorder.prepare();
+            }
+            catch (IOException fileErr)
+            {
+                mCamera.reconnect();
+                throw fileErr;
+            }
+
+            mMediaRecorder.start();
+        }
+        else
+        {
+            throw new IllegalStateException(getContext().getString(R.string.no_cam_instance));
         }
     }
 
