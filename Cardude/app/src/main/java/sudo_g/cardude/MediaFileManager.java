@@ -2,6 +2,7 @@ package sudo_g.cardude;
 
 import android.content.Context;
 import android.os.Environment;
+import android.util.Log;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -9,15 +10,20 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Queue;
+import java.util.ArrayDeque;
 
 public class MediaFileManager
 {
     private static final String DEFAULT_PHOTO_PATH_FROM_EXT = "cardude/photos";
+    private static final String VIDEO_BUFFER_FROM_EXT = "cardude/.videobuffer";
+
+    private static final int VIDEO_BUFFER_DEPTH = 2;
 
     private static MediaFileManager singletonMediaFileManager;
 
     private Context mContext;
-    private File mInputFile;
+    private Queue<FileOutputStream> mVideoBuffers = new ArrayDeque<FileOutputStream>(VIDEO_BUFFER_DEPTH);
 
     /**
      * Gets a handle to the file manager.
@@ -47,36 +53,28 @@ public class MediaFileManager
      */
     public FileOutputStream getPhotoInputStream() throws IOException
     {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss", Locale.UK);
-        String fileName = sdf.format(new Date());
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
         {
-            String photoStorageLocationPath = String.format("%s/%s",
-                    Environment.getExternalStorageDirectory().getAbsoluteFile(),
-                    DEFAULT_PHOTO_PATH_FROM_EXT
-            );
-            File photoStorageLocation = new File(photoStorageLocationPath);
-            if (!photoStorageLocation.exists())
+            File photoStorageLocation = createDirIfNoExists(DEFAULT_PHOTO_PATH_FROM_EXT);
+            if (photoStorageLocation != null)
             {
-                if (photoStorageLocation.mkdirs())
-                {
-                    String fileNameExt = String.format("/%s.jpg", fileName);
-                    String fullPath = String.format("%s/%s", photoStorageLocationPath, fileNameExt);
-                    File file = new File(fullPath);
-                    return new FileOutputStream(file);
-                }
-                else
-                {
-                    throw new IOException(mContext.getString(R.string.photo_dir_error));
-                }
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss", Locale.UK);
+                String fileName = sdf.format(new Date());
+                String photoStorageLocationPath = photoStorageLocation.getAbsolutePath();
+                String fileNameExt = String.format("/%s.jpg", fileName);
+                String fullPath = String.format("%s/%s", photoStorageLocationPath, fileNameExt);
+                File file = new File(fullPath);
+                return new FileOutputStream(file);
+            }
+            else
+            {
+                throw new IOException(mContext.getString(R.string.photo_dir_error));
             }
         }
         else
         {
             throw new IOException(mContext.getString(R.string.no_ext_storage));
         }
-
-        return null;
     }
 
     /**
@@ -89,13 +87,55 @@ public class MediaFileManager
     {
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
         {
-            mInputFile = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/testvideo.mp4");
-            mInputFile.createNewFile();
-            return new FileOutputStream(mInputFile);
+            File videoBufferLocation = createDirIfNoExists(DEFAULT_PHOTO_PATH_FROM_EXT);
+            if (videoBufferLocation != null)
+            {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss", Locale.UK);
+                String fileName = sdf.format(new Date());
+                String videoBufferLocationPath = videoBufferLocation.getAbsolutePath();
+                String fileNameExt = String.format("/%s.jpg", fileName);
+                String fullPath = String.format("%s/%s", videoBufferLocationPath, fileNameExt);
+                if (mVideoBuffers.add(new FileOutputStream(new File(fullPath))))
+                {
+                    return mVideoBuffers.peek();
+                }
+                else
+                {
+                    // video buffer depth full, remove oldest before adding new
+                    mVideoBuffers.remove().close();
+                    mVideoBuffers.add(new FileOutputStream(new File(fullPath)));
+                    return mVideoBuffers.peek();
+                }
+            }
+            else
+            {
+                throw new IOException(mContext.getString(R.string.vid_buffer_dir_error));
+            }
         }
         else
         {
             throw new IOException(mContext.getString(R.string.no_ext_storage));
         }
+    }
+
+    private File createDirIfNoExists(String directory)
+    {
+        String dirPath = String.format("%s/%s",
+                Environment.getExternalStorageDirectory().getAbsoluteFile(),
+                directory
+        );
+        File dir = new File(dirPath);
+        if (!dir.exists())
+        {
+            if (dir.mkdirs())
+            {
+                return dir;
+            }
+        }
+        else
+        {
+            return dir;
+        }
+        return null;
     }
 }
