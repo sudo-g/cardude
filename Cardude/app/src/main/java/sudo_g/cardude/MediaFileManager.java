@@ -2,20 +2,27 @@ package sudo_g.cardude;
 
 import android.content.Context;
 import android.os.Environment;
+import android.util.Log;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Queue;
 import java.util.ArrayDeque;
+import org.apache.commons.io.IOUtils;
 
 public class MediaFileManager
 {
     private static final String DEFAULT_PHOTO_PATH_FROM_EXT = "cardude/photos";
     private static final String VIDEO_BUFFER_FROM_EXT = "cardude/~videobuffer";
+    private static final String DEFAULT_VIDEO_PATH_FROM_EXT = "cardude/videos";
 
     private static final int VIDEO_BUFFER_DEPTH = 3;
 
@@ -50,7 +57,7 @@ public class MediaFileManager
      * @return Stream to write photo data to.
      * @throws IOException Error during file creation.
      */
-    public FileOutputStream getPhotoInputStream() throws IOException
+    public FileOutputStream getNewPhotoFileStream() throws IOException
     {
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
         {
@@ -82,7 +89,7 @@ public class MediaFileManager
      * @return File descriptor of file to write video to.
      * @throws IOException Error during file creation.
      */
-    public File getVideoFD() throws IOException
+    public File getNewVideoBufferFD() throws IOException
     {
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
         {
@@ -114,6 +121,60 @@ public class MediaFileManager
         else
         {
             throw new IOException(mContext.getString(R.string.no_ext_storage));
+        }
+    }
+
+    public void clearVideoBuffer()
+    {
+        for (File f: mVideoBuffers)
+        {
+            f.delete();
+        }
+    }
+
+    public FileOutputStream getNewVideoVideoFileStream() throws IOException
+    {
+        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
+        {
+            File videoStorageLocation = createDirIfNoExists(DEFAULT_VIDEO_PATH_FROM_EXT);
+            if (videoStorageLocation != null)
+            {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss", Locale.UK);
+                String fileName = sdf.format(new Date());
+                String videoStorageLocationPath = videoStorageLocation.getAbsolutePath();
+                String fileNameExt = String.format("/%s.mp4", fileName);
+                String fullPath = String.format("%s/%s", videoStorageLocationPath, fileNameExt);
+                Log.d("MediaFileManager", fullPath);
+                File file = new File(fullPath);
+                return new FileOutputStream(file);
+            }
+            else
+            {
+                throw new IOException(mContext.getString(R.string.video_dir_error));
+            }
+        }
+        else
+        {
+            throw new IOException(mContext.getString(R.string.no_ext_storage));
+        }
+    }
+
+    /**
+     * Permanently saves the latest content from the video buffer.
+     *
+     * @throws IOException if error occurred opening files or copying.
+     */
+    public void saveVideoBuffer() throws IOException
+    {
+        InputStream in = new FileInputStream(mVideoBuffers.remove());
+        try
+        {
+            OutputStream out = getNewVideoVideoFileStream();
+            IOUtils.copy(in, out);
+        }
+        finally
+        {
+            in.close();
         }
     }
 

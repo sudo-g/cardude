@@ -37,6 +37,11 @@ public class CameraActivity extends ActionBarActivity {
                 .setMessage(String.format(getString(R.string.photo_alert_body), message))
                 .show();
         }
+
+        public void onSaveVideoBufferError(String message)
+        {
+            mVideoErrorAlert.setMessage(message).show();
+        }
     };
 
     private DriveControls mDriveControls;
@@ -50,7 +55,16 @@ public class CameraActivity extends ActionBarActivity {
 
         public void captureLastVideoBufferRequest()
         {
-            // stop the video for now
+            try
+            {
+                mCameraSurface.captureLastVideoBuffer();
+            }
+            catch (IOException e)
+            {
+                mVideoErrorAlert
+                        .setMessage(String.format(getString(R.string.video_alert_body), e.getMessage()))
+                        .show();
+            }
         }
 
         public boolean onDriveStart()

@@ -24,7 +24,19 @@ public class CameraSurface extends SurfaceView
 {
     public interface Listener
     {
+        /**
+         * Called when error occurs on taking a still photo.
+         *
+         * @param message Human readable error message.
+         */
         public void onTakePictureError(String message);
+
+        /**
+         * Called when error occurs on saving the video buffer.
+         *
+         * @param message Human readable error message.
+         */
+        public void onSaveVideoBufferError(String message);
     }
 
     private static final int CIRCULAR_BUFFER_LENGTH_MS = 5000;
@@ -42,6 +54,7 @@ public class CameraSurface extends SurfaceView
     private List<Camera.Size> mSupportedVideoSizes;
     private Camera.Size mSelectedVideoSize;
     private MediaFileManager mMediaFileManager;     // TODO: Change circular buffer implementation
+    private boolean mSaveBufferRequested = false;
     private Handler mVideoBufferHandler = new Handler();
     private Runnable mVideoShuffleTask = new Runnable()
     {
@@ -49,6 +62,21 @@ public class CameraSurface extends SurfaceView
         public void run()
         {
             mMediaRecorder.stop();
+            if (mSaveBufferRequested)
+            {
+                try
+                {
+                    mMediaFileManager.saveVideoBuffer();
+                }
+                catch (IOException e)
+                {
+                    if (mListener != null)
+                    {
+                        mListener.onSaveVideoBufferError(getContext().getString(R.string.video_buffer_save_error));
+                    }
+                }
+                mSaveBufferRequested = false;
+            }
             try
             {
                 prepareMediaRecorder(mMediaFileManager);
@@ -158,6 +186,7 @@ public class CameraSurface extends SurfaceView
 
     public void stop()
     {
+        stopRecordVideo();
         mSurfaceHolder.removeCallback(mSurfaceHolderEvents);
     }
 
@@ -192,7 +221,7 @@ public class CameraSurface extends SurfaceView
 
                         try
                         {
-                            FileOutputStream stream = fileManager.getPhotoInputStream();
+                            FileOutputStream stream = fileManager.getNewPhotoFileStream();
                             if (stream != null)
                             {
                                 stream.write(data);
@@ -230,16 +259,30 @@ public class CameraSurface extends SurfaceView
         mVideoBufferHandler.postDelayed(mVideoShuffleTask, CIRCULAR_BUFFER_LENGTH_MS);
     }
 
-    public void captureLastVideoBuffer()
+    /**
+     * Saves the latest content in the video buffer.
+     *
+     * @throws IOException
+     */
+    public void captureLastVideoBuffer() throws IOException
     {
-
+        mSaveBufferRequested = true;
     }
 
     public void stopRecordVideo()
     {
         mRecording = false;
         mVideoBufferHandler.removeCallbacks(mVideoShuffleTask);
-        mMediaRecorder.stop();
+        try
+        {
+            mMediaRecorder.stop();
+        }
+        catch (RuntimeException e)
+        {
+            // no video was recorded when request stopped
+        }
+
+        mMediaFileManager.clearVideoBuffer();
         mMediaFileManager = null;
     }
 
@@ -301,7 +344,7 @@ public class CameraSurface extends SurfaceView
 
             try
             {
-                mMediaRecorder.setOutputFile(mMediaFileManager.getVideoFD().getAbsolutePath());
+                mMediaRecorder.setOutputFile(mMediaFileManager.getNewVideoBufferFD().getAbsolutePath());
                 mMediaRecorder.prepare();
             }
             catch (IOException fileErr)

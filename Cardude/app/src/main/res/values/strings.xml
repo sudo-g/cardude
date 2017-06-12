@@ -31,6 +31,8 @@
 
     <string name="no_ext_storage">External storage directory not mounted.</string>
     <string name="photo_dir_error">Could not write to photo storage directory</string>
+    <string name="video_dir_error">Could not write to video storage directory</string>
     <string name="vid_buffer_dir_error">Video buffer error</string>
     <string name="no_cam_instance">Camera instance invalid.</string>
+    <string name="video_buffer_save_error">Error occurred saving video buffer.</string>
 </resources>
