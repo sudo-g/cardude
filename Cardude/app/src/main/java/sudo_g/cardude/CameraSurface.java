@@ -64,17 +64,7 @@ public class CameraSurface extends SurfaceView
             mMediaRecorder.stop();
             if (mSaveBufferRequested)
             {
-                try
-                {
-                    mMediaFileManager.saveVideoBuffer();
-                }
-                catch (IOException e)
-                {
-                    if (mListener != null)
-                    {
-                        mListener.onSaveVideoBufferError(getContext().getString(R.string.video_buffer_save_error));
-                    }
-                }
+                mMediaFileManager.saveVideoBuffer();
                 mSaveBufferRequested = false;
             }
             try
