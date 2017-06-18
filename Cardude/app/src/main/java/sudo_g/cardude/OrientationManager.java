@@ -3,21 +3,20 @@ package sudo_g.cardude;
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.hardware.SensorManager;
-import android.util.Log;
 import android.view.OrientationEventListener;
 
 import org.apache.commons.collections4.queue.CircularFifoQueue;
 
 public class OrientationManager
 {
-    private static final int ROTATION_THRESHOLD = 20;
+    private static final int ROTATION_THRESHOLD = 30;
     private static final int PORTRAIT_ANGLE = 360;
     private static final int REVERSE_PORTRAIT_ANGLE = PORTRAIT_ANGLE / 2;
     private static final int LANDSCAPE_ANGLE = PORTRAIT_ANGLE / 4;
     private static final int REVERSE_LANDSCAPE_ANGLE = REVERSE_PORTRAIT_ANGLE + LANDSCAPE_ANGLE;
 
-    private static final int ROTATION_HISTORY_LENGTH = 32;
-    private static final int NOT_ROTATING_THRESHOLD = 2;
+    private static final int ROTATION_HISTORY_LENGTH = 16;
+    private static final int NOT_ROTATING_THRESHOLD = 6;
 
     enum DeviceOrientation
     {
