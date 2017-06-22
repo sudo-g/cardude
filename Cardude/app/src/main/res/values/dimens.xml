@@ -9,4 +9,6 @@
     <dimen name="gmeter_width">150dp</dimen>
     <dimen name="gmeter_tick_text">10dp</dimen>
     <dimen name="gmeter_tick_mark">10dp</dimen>
+
+    <dimen name="seekbar_number_padding">15dp</dimen>
 </resources>
