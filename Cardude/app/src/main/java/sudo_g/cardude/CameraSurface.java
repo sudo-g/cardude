@@ -8,12 +8,14 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.List;
 
+import android.content.SharedPreferences;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 import android.content.Context;
 import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.util.AttributeSet;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -39,7 +41,8 @@ public class CameraSurface extends SurfaceView
         public void onSaveVideoBufferError(String message);
     }
 
-    private static final int CIRCULAR_BUFFER_LENGTH_MS = 5000;
+    private static int DEFAULT_CIRCULAR_BUFFER_LENGTH_MS = 20000;
+    private int mCircularBufferLengthMs = DEFAULT_CIRCULAR_BUFFER_LENGTH_MS;
 
     private DeviceOrientation mCurrentRotation = DeviceOrientation.PORTRAIT;
 
@@ -72,7 +75,7 @@ public class CameraSurface extends SurfaceView
                 prepareMediaRecorder(mMediaFileManager);
                 if (mRecording)
                 {
-                    mVideoBufferHandler.postDelayed(this, CIRCULAR_BUFFER_LENGTH_MS);
+                    mVideoBufferHandler.postDelayed(this, mCircularBufferLengthMs);
                 }
             }
             catch (IOException e)
@@ -246,7 +249,7 @@ public class CameraSurface extends SurfaceView
     {
         mRecording = true;
         prepareMediaRecorder(fileManager);
-        mVideoBufferHandler.postDelayed(mVideoShuffleTask, CIRCULAR_BUFFER_LENGTH_MS);
+        mVideoBufferHandler.postDelayed(mVideoShuffleTask, mCircularBufferLengthMs);
     }
 
     /**
@@ -266,6 +269,11 @@ public class CameraSurface extends SurfaceView
         try
         {
             mMediaRecorder.stop();
+            if (mSaveBufferRequested)
+            {
+                mMediaFileManager.saveVideoBuffer();
+                mSaveBufferRequested = false;
+            }
         }
         catch (RuntimeException e)
         {
@@ -353,6 +361,11 @@ public class CameraSurface extends SurfaceView
 
     private void initialize()
     {
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getContext());
+        int circularBufferLengthS = pref.getInt("pref_key_video_buffer_time", -1);
+        mCircularBufferLengthMs = (circularBufferLengthS == -1) ?
+                DEFAULT_CIRCULAR_BUFFER_LENGTH_MS : 1000*circularBufferLengthS;
+
         mCamIndex = findBackFacingCameraIndex();
         mSurfaceHolder = getHolder();
     }

@@ -37,7 +37,7 @@
     <string name="video_buffer_save_error">Error occurred saving video buffer.</string>
 
     <!-- Setting strings -->
-    <string name="video_buffer_time_summary">Save this many seconds of video</string>
+    <string name="video_buffer_time_summary">Number of seconds of video to save on capture</string>
     <string name="video_buffer_time_title">Video buffer time</string>
     <string name="video_buffer_record_all">All</string>
 </resources>

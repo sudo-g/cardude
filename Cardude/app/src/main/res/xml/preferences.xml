@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <sudo_g.cardude.SeekBarPreferenceInfEnd
+    <sudo_g.cardude.VideoBufferTimeSelector
         android:key="pref_key_video_buffer_time"
         android:title="@string/video_buffer_time_title"
         android:summary="@string/video_buffer_time_summary"

@@ -8,12 +8,12 @@ import android.view.View;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-public class SeekBarPreferenceInfEnd extends DialogPreference implements SeekBar.OnSeekBarChangeListener
+public class VideoBufferTimeSelector extends DialogPreference implements SeekBar.OnSeekBarChangeListener
 {
     private SeekBar mSeekBar;
     private TextView mValueText;
 
-    public SeekBarPreferenceInfEnd(Context context, AttributeSet attrs)
+    public VideoBufferTimeSelector(Context context, AttributeSet attrs)
     {
         super(context, attrs);
 
