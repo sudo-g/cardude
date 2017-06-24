@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="video_buffer_time_summary">Video length to save on capture</string>
+    <string name="video_buffer_time_title">Video buffer length</string>
+    <string name="video_buffer_record_all">All</string>
+
+    <string-array name="video_buffer_time_selections">
+        <item>6s</item>
+        <item>10s</item>
+        <item>20s</item>
+        <item>30s</item>
+        <item>60s</item>
+        <item>90s</item>
+        <item>2min</item>
+        <item>3min</item>
+        <item>5min</item>
+        <item>All</item>
+    </string-array>
+
+    <!-- Android only supports string arrays for list preferences, ideally use integer array -->
+    <string-array name="video_buffer_time_selection_values">
+        <item>6</item>
+        <item>10</item>
+        <item>20</item>
+        <item>30</item>
+        <item>60</item>
+        <item>90</item>
+        <item>120</item>
+        <item>180</item>
+        <item>300</item>
+        <item>0</item>
+    </string-array>
+</resources>

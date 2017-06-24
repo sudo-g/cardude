@@ -73,7 +73,7 @@ public class CameraSurface extends SurfaceView
             try
             {
                 prepareMediaRecorder(mMediaFileManager);
-                if (mRecording)
+                if (mRecording && mCircularBufferLengthMs > 0)
                 {
                     mVideoBufferHandler.postDelayed(this, mCircularBufferLengthMs);
                 }
@@ -249,7 +249,10 @@ public class CameraSurface extends SurfaceView
     {
         mRecording = true;
         prepareMediaRecorder(fileManager);
-        mVideoBufferHandler.postDelayed(mVideoShuffleTask, mCircularBufferLengthMs);
+        if (mCircularBufferLengthMs > 0)
+        {
+            mVideoBufferHandler.postDelayed(mVideoShuffleTask, mCircularBufferLengthMs);
+        }
     }
 
     /**
@@ -361,10 +364,14 @@ public class CameraSurface extends SurfaceView
 
     private void initialize()
     {
+        // determine buffer recording time
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getContext());
-        int circularBufferLengthS = pref.getInt("pref_key_video_buffer_time", -1);
-        mCircularBufferLengthMs = (circularBufferLengthS == -1) ?
-                DEFAULT_CIRCULAR_BUFFER_LENGTH_MS : 1000*circularBufferLengthS;
+        String strCircularBufferLength = pref.getString(
+            "pref_key_video_buffer_time",
+             String.format("%d", DEFAULT_CIRCULAR_BUFFER_LENGTH_MS)
+        );
+        // stored in shared preferences as seconds
+        mCircularBufferLengthMs = 1000*Integer.parseInt(strCircularBufferLength);
 
         mCamIndex = findBackFacingCameraIndex();
         mSurfaceHolder = getHolder();

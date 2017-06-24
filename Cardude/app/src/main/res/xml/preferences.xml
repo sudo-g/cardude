@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <sudo_g.cardude.VideoBufferTimeSelector
+    <ListPreference
         android:key="pref_key_video_buffer_time"
         android:title="@string/video_buffer_time_title"
         android:summary="@string/video_buffer_time_summary"
-        android:defaultValue="@integer/video_buffer_default_s"
-        android:max="@integer/video_buffer_max_s" />
+        android:entries="@array/video_buffer_time_selections"
+        android:entryValues="@array/video_buffer_time_selection_values" />
 
 </PreferenceScreen>

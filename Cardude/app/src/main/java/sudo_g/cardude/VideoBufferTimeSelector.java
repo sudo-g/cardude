@@ -10,6 +10,8 @@ import android.widget.TextView;
 
 public class VideoBufferTimeSelector extends DialogPreference implements SeekBar.OnSeekBarChangeListener
 {
+    private final int MAX_VID_BUFFER_TIME;
+
     private SeekBar mSeekBar;
     private TextView mValueText;
 
@@ -17,6 +19,7 @@ public class VideoBufferTimeSelector extends DialogPreference implements SeekBar
     {
         super(context, attrs);
 
+        MAX_VID_BUFFER_TIME = getContext().getResources().getInteger(R.integer.video_buffer_max_s);
         setDialogLayoutResource(R.layout.seekbar_and_number);
     }
 
@@ -34,11 +37,13 @@ public class VideoBufferTimeSelector extends DialogPreference implements SeekBar
             mSeekBar.setProgress(mSeekBar.getMax());
             mValueText.setText(getContext().getString(R.string.video_buffer_record_all));
         }
-        else
+        else if (videoBufferTime > 0)
         {
-            mSeekBar.setProgress(videoBufferTime);
+            mSeekBar.setProgress(reverseSeekBarValueMapping(videoBufferTime));
             mValueText.setText(String.format("%d", videoBufferTime));
         }
+
+        // at the moment, nothing happens if the preference cannot be found
 
         mSeekBar.setOnSeekBarChangeListener(this);
 
@@ -46,18 +51,20 @@ public class VideoBufferTimeSelector extends DialogPreference implements SeekBar
     }
 
     @Override
-    public void onProgressChanged(SeekBar seek, int value, boolean fromTouch)
+    public void onProgressChanged(SeekBar seek, int seekBarValue, boolean fromTouch)
     {
         SharedPreferences.Editor prefEditor = getSharedPreferences().edit();
-        if (value == mSeekBar.getMax())
+        if (seekBarValue == mSeekBar.getMax())
         {
             // special case when seek bar is at max to indicate record all video
             mValueText.setText(getContext().getString(R.string.video_buffer_record_all));
         }
-        else if (value > 0)
+        else if (seekBarValue > 0)
         {
+            int actualValue = applySeekBarValueMapping(seekBarValue);
+
             // don't let 0 be selected because 0s length buffer makes no sense
-            mValueText.setText(String.format("%d", value));
+            mValueText.setText(String.format("%d", actualValue));
         }
     }
 
@@ -80,7 +87,7 @@ public class VideoBufferTimeSelector extends DialogPreference implements SeekBar
         else if (seekBarProgress > 0)
         {
             // don't write 0 to value of preference if seek bar is dragged left
-            prefEditor.putInt("pref_key_video_buffer_time", seekBarProgress);
+            prefEditor.putInt("pref_key_video_buffer_time", applySeekBarValueMapping(seekBarProgress));
             prefEditor.commit();
         }
 
@@ -97,5 +104,16 @@ public class VideoBufferTimeSelector extends DialogPreference implements SeekBar
     public void onStopTrackingTouch(SeekBar seek)
     {
 
+    }
+
+    private int applySeekBarValueMapping(int seekBarValue)
+    {
+        int seekBarMax = mSeekBar.getMax();
+        return MAX_VID_BUFFER_TIME * seekBarValue / seekBarMax;
+    }
+
+    private int reverseSeekBarValueMapping(int videoBufferTime)
+    {
+        return mSeekBar.getMax() * videoBufferTime / MAX_VID_BUFFER_TIME;
     }
 }
