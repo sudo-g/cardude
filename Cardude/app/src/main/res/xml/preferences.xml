@@ -8,4 +8,10 @@
         android:entries="@array/video_buffer_time_selections"
         android:entryValues="@array/video_buffer_time_selection_values" />
 
+    <sudo_g.cardude.VideoResSelector
+        android:key="pref_key_video_res"
+        android:title="@string/video_resolution_title"
+        android:summary="@string/video_resolution_summary"
+        android:defaultValue="Unspecified"/>
+
 </PreferenceScreen>

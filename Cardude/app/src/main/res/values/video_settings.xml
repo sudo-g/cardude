@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Video buffering -->
+    <integer name="video_buffer_default_s">20</integer>
+    <integer name="video_buffer_max_s">300</integer>
     <string name="video_buffer_time_summary">Video length to save on capture</string>
-    <string name="video_buffer_time_title">Video buffer length</string>
+    <string name="video_buffer_time_title">Video Buffer Length</string>
     <string name="video_buffer_record_all">All</string>
 
     <string-array name="video_buffer_time_selections">
@@ -30,4 +33,8 @@
         <item>300</item>
         <item>0</item>
     </string-array>
+
+    <!-- Video resolution -->
+    <string name="video_resolution_summary">Resolution to record video at.</string>
+    <string name="video_resolution_title">Video Resolution</string>
 </resources>
