@@ -88,7 +88,7 @@ public class MediaFileManager
     }
 
     /**
-     * Gets an input stream for writing video data to.
+     * Gets file descriptor for writing video buffer data to.
      *
      * @return File descriptor of file to write video to.
      * @throws IOException Error during file creation.
@@ -143,6 +143,9 @@ public class MediaFileManager
         }
     }
 
+    /**
+     * Deletes all temporary video files created during buffering.
+     */
     public void clearVideoBuffer()
     {
         for (File f: mVideoBuffers)
@@ -151,6 +154,12 @@ public class MediaFileManager
         }
     }
 
+    /**
+     * Gets an
+     *
+     * @return FileOutputStream to write to.
+     * @throws IOException Error during file creation.
+     */
     public FileOutputStream getNewVideoVideoFileStream() throws IOException
     {
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
