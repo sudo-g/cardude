@@ -12,6 +12,6 @@
         android:key="pref_key_video_res"
         android:title="@string/video_resolution_title"
         android:summary="@string/video_resolution_summary"
-        android:defaultValue="Unspecified"/>
+        android:defaultValue="-1"/>
 
 </PreferenceScreen>

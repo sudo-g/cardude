@@ -1,21 +1,22 @@
 package sudo_g.cardude;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.hardware.Camera;
 import android.preference.DialogPreference;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.ListView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 
 import java.util.List;
 
 public class VideoResSelector extends DialogPreference
 {
-    private ListView mResolutionSelector;
+    private RadioGroup mResolutionSelector;
 
     public VideoResSelector(Context context, AttributeSet attrs)
     {
@@ -30,7 +31,16 @@ public class VideoResSelector extends DialogPreference
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
 
-        mResolutionSelector = new ListView(getContext());
+        mResolutionSelector = new RadioGroup(getContext());
+        mResolutionSelector.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener()
+            {
+               @Override
+               public void onCheckedChanged(RadioGroup radioGroup, int i)
+               {
+
+               }
+            }
+        );
         mResolutionSelector.setLayoutParams(layoutParams);
 
         LinearLayout parentView = new LinearLayout(getContext());
@@ -44,21 +54,45 @@ public class VideoResSelector extends DialogPreference
     {
         super.onBindDialogView(view);
 
+        // build menu by querying camera hardware for available options
         List<Camera.Size> resolutions = getSupportedResolutions();
-        String[] resolutionLabels = new String[resolutions.size()];
-        for (int i=0; i<resolutions.size(); i++)
+        int selectionOrder = 0;
+        for (Camera.Size resolution : resolutions)
         {
-            int width = resolutions.get(i).width;
-            int height = resolutions.get(i).height;
-            resolutionLabels[i] = String.format("%d x %d", width, height);
+            int width = resolution.width;
+            int height = resolution.height;
+            String radioLabel = String.format("%d x %d", width, height);
+
+            RadioButton rb = new RadioButton(getContext());
+            rb.setText(radioLabel);
+            rb.setId(selectionOrder++);
+            mResolutionSelector.addView(rb);
         }
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(
-            getContext(),
-            R.layout.single_textview,
-            resolutionLabels
-        );
-        mResolutionSelector.setAdapter(adapter);
+        // indicate what resolution has currently been selected if any
+        SharedPreferences pref = getSharedPreferences();
+        int vidResIndex = pref.getInt("pref_key_video_res", -1);
+        if (vidResIndex > -1)
+        {
+            mResolutionSelector.check(vidResIndex);
+        }
+        else
+        {
+            // pre-select the highest resolution by default (not committed until "OK" is pressed)
+            mResolutionSelector.check(0);
+        }
+    }
+
+    @Override
+    protected void onDialogClosed(boolean positiveResult)
+    {
+        if (positiveResult)
+        {
+            int selectedIndex = mResolutionSelector.getCheckedRadioButtonId();
+            SharedPreferences.Editor editor = getSharedPreferences().edit();
+            editor.putInt("pref_key_video_res", selectedIndex);
+            editor.commit();
+        }
     }
 
     private List<Camera.Size> getSupportedResolutions()
